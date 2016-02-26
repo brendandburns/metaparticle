@@ -1,4 +1,5 @@
 var mp = require('./metaparticle');
+var runner = require('./metaparticle-docker');
 
 mp.service(
     function(request) {
@@ -6,4 +7,4 @@ mp.service(
     }
 );
 
-mp.serve();
+mp.serve(runner);

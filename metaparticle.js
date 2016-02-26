@@ -55,9 +55,13 @@
 	};
     };
 
-    module.exports.serve = function() {
-	var server = jayson.server(handlers);
-	server.http().listen(parseInt(process.argv[2]));
+    module.exports.serve = function(runner) {
+	if (process.argv[2] == 'serve') {
+          	var server = jayson.server(handlers);
+		server.http().listen(parseInt(process.argv[3]));
+        } else {
+		runner.run();
+	}
     };
 }());
 
