@@ -1,6 +1,8 @@
 var mp = require('./metaparticle');
+var runner = require('./metaparticle-print.js')
 
 mp.service(
+        "my-scatter-gather",
 	mp.scatter(3, function(data) {
 		return {"A": "a"};
 	},
@@ -12,4 +14,4 @@ mp.service(
 		return merged;
        }));
 
-mp.serve();
+mp.serve(runner);

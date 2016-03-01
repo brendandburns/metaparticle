@@ -3,11 +3,22 @@
     var client = jayson.client.http({port:3000});
     var q = require('q');
 
+    // implementation
     var handlers = [];
     var server;
 
-    module.exports.service = function(fn) {
-       handlers['add'] = function(args, callback) {
+    // Canonical list of defined services 
+    var services = {};
+
+    var makeName = function(service) {
+	return service.join(".");
+    }
+
+    module.exports.service = function(name, fn) {
+       var service = {
+          'name': name,
+          'subservices': fn.services,
+          'fn': function(args, callback) {
               if (!fn.async) {
                    callback(null, fn.apply(null, args));
               } else {
@@ -17,7 +28,10 @@
 		   }
                    fn.fn.apply(null, params);
               }
-          };
+          }
+       }
+       services[name] = service;
+       handlers[name] = service.fn;
     };
 
     var requestPromise = function(client, data) {
@@ -37,9 +51,19 @@
 		callback(null, scatterFn.apply(null, args));
         }
 	return {
+            services: {
+                'scatter': {
+                    'name': 'scatter',
+                    'fn': scatterFn,
+                },
+                'gather': {
+                    'name': 'gather',
+                    'fn': gatherFn,
+                    'depends': [ 'scatter' ],
+                }
+            },
             async: true,
             fn: function(callback, data) {
-                var results = ['a', 'b'];
 		var promises = [];
 		for (var i = 0; i < shards; i++) {
 			promises.push(requestPromise(client, data));
@@ -60,8 +84,12 @@
           	var server = jayson.server(handlers);
 		server.http().listen(parseInt(process.argv[3]));
         } else {
-		runner.run();
+		runner.run(services);
 	}
     };
+
+    module.exports.print = function() {
+        console.log(JSON.stringify(services, null, 4));
+    }
 }());
 
