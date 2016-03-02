@@ -18,6 +18,7 @@
        var service = {
           'name': name,
           'subservices': fn.services,
+          'replicas': 1,
           'fn': function(args, callback) {
               if (!fn.async) {
                    callback(null, fn.apply(null, args));
@@ -55,11 +56,13 @@
                 'scatter': {
                     'name': 'scatter',
                     'fn': scatterFn,
+                    'replicas': shards,
                 },
                 'gather': {
                     'name': 'gather',
                     'fn': gatherFn,
                     'depends': [ 'scatter' ],
+                    'replicas': 1,
                 }
             },
             async: true,
