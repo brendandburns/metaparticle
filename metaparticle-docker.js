@@ -80,8 +80,6 @@
 	var deferred2 = q.defer();
 	deferred.promise.then(
 	function(container) {
-		console.log("Starting: ");
-		console.log(container);
 		container.start( 
 		{
 			//"PortBindings": { "3000/tcp": [{ "HostPort": "3000" }] }
@@ -97,9 +95,6 @@
 	}).done();
 	deferred2.promise.then(
 	function(data) {
-		console.log(network);
-		console.log("container")
-		console.log(data.id);
 		network.connect({
 			"Container": data.id
 		}, function(err, data) {
