@@ -62,7 +62,7 @@
 	client.createContainer(
 	{
 		Image: 'brendandburns/metaparticle',
-		Cmd: ['node', '/server.js', 'serve', '3000'],
+		Cmd: ['node', '/server2.js', 'serve', '3000'],
 		name: name,
 	        ExposedPorts: {
                         '3000/tcp': {}
