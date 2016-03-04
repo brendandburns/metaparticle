@@ -85,7 +85,46 @@
               }
         });
 	return defer.promise;
-    }; 
+    };
+
+    module.exports.spread = function(replicas, computeFn) {
+	return module.exports.shard(replicas, function(data) { return Math.floor(Math.random() * replicas); }, computeFn);
+    }
+
+    module.exports.shard = function(shards, shardingFn, computeFn) {
+	handlers['compute'] = function(args, callback) {
+		callback(null, computeFn.apply(null, args));
+	}
+	var computeGUID = makeGUID();
+	return {
+	    services: {
+		'compute': {
+			'name': 'compute',
+			'guid': computeGUID,
+			'fn': computeFn,
+			'replicas': shards
+		},
+		'shard': {
+			'name': 'shard',
+			'fn': function(data) { return data; },
+			'guid': makeGUID(),
+			'depends': [ 'compute' ],
+			'replicas': 1
+		}
+	    },
+	    async: true,
+	    fn: function(callback, data) {
+		var shard = shardingFn(data) % shards;
+		var serviceName = findServiceName(computeGUID);
+		var promise = requestPromise(serviceName, shard, data);
+		promise.then(function(data) {
+			callback(null, data);
+		}, function(err) {
+			callback(err, null);
+		});
+	    }
+	};
+   };	
 
     module.exports.scatter = function(shards, scatterFn, gatherFn) {
         handlers['scatter'] = function(args, callback) {
@@ -98,7 +137,7 @@
                     'name': 'scatter',
                     'guid': scatterGUID,
                     'fn': scatterFn,
-                    'replicas': shards,
+                    'replicas': shards
                 },
                 'gather': {
                     'name': 'gather',
