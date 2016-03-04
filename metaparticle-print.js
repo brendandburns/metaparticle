@@ -1,7 +1,11 @@
 (function() {
     module.exports.run = function(services) {
         recursivePrint([], services);
-    }
+    };
+
+    module.exports.getHostname = function(serviceName, shard) {
+	return serviceName + '.' + shard;
+    };
 
     var makeServiceName = function(prefix, name) {
 	if (!prefix || prefix.length == 0) {
@@ -11,7 +15,7 @@
 		return name;
 	}
 	return prefix.join(".") + "." + name;
-    }
+    };
 
     var recursivePrint = function(prefix, services) {
 	if (!services) {

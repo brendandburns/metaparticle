@@ -5,6 +5,7 @@
     // implementation
     var handlers = [];
     var server;
+    var runEnvironment;
 
     // Canonical list of defined services 
     var services = {};
@@ -71,8 +72,7 @@
     };
 
     var requestPromise = function(serviceName, shard, data) {
-	// TODO: Defer this to the runner implementation
-	var host = serviceName + "." + shard;
+	var host = runEnvironment.getHostname(serviceName, shard);
 	console.log("connecting to: " + host)
     	var client = jayson.client.http("http://" + host + ":3000");
     	var defer = q.defer();
@@ -127,6 +127,7 @@
     };
 
     module.exports.serve = function(runner) {
+	runEnvironment = runner;
 	if (process.argv[2] == 'serve') {
 		console.log(handlers);
           	var server = jayson.server(handlers);

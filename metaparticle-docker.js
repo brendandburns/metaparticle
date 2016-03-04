@@ -3,6 +3,10 @@
     var docker = require('dockerode');
     var client = new docker({socketPath: '/var/run/docker.sock'});
 
+    module.exports.getHostname = function(serviceName, shard) {
+	return serviceName + '.' + shard;
+    }
+
     module.exports.run = function(services) {
         var promise = createNetwork('network');
 	promise.then(function(network) {
