@@ -69,6 +69,7 @@
        }
        services[name] = service;
        handlers[name] = service.fn;
+       return service;
     };
 
     var requestPromise = function(serviceName, shard, data) {
