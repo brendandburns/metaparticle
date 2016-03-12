@@ -172,7 +172,10 @@
           	var server = jayson.server(handlers);
 		server.http().listen(parseInt(process.argv[3]));
         } else {
-		runner.run(services);
+		var promise = runner.build();
+                promise.then(function() {
+		   runner.run(services);
+		}).done();
 	}
     };
 

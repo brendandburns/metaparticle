@@ -1,4 +1,10 @@
 (function() {
+    var q = require('q');
+
+    module.exports.build = function() {
+        return q.fcall(function(){});
+    };
+
     module.exports.run = function(services) {
         recursivePrint([], services);
     };

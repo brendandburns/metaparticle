@@ -7,8 +7,30 @@
 	return serviceName + '.' + shard;
     }
 
+    module.exports.build = function() {
+        var tar = require('tar-fs');
+	var defer = q.defer();
+	var tarStream = tar.pack(process.cwd());
+	console.log("starting build");
+	client.buildImage(tarStream, {
+	  t: 'brendandburns/metaparticle'
+	}, function(err, output) {
+	  if (err) {
+	     defer.reject(err);
+	  } else {
+             console.log("build started");
+	     output.pipe(process.stdout, {end: true});
+             output.on('end', function() {
+		 console.log("build success");
+	         defer.resolve(null);
+	     });
+	  }
+	});
+	return defer.promise;
+    }
+
     module.exports.run = function(services) {
-        var promise = createNetwork('network');
+        var promise = createNetwork('mp-network');
 	promise.then(function(network) {
         	recursiveRun([], services, network);
 	});
@@ -21,9 +43,9 @@
                 "Driver":"bridge",
                 "IPAM":{
                         "Config":[{
-                                "Subnet":"172.20.0.0/16",
-                                "IPRange":"172.20.10.0/24",
-                                "Gateway":"172.20.10.11"
+                                "Subnet":"172.21.0.0/16",
+                                "IPRange":"172.21.12.0/24",
+                                "Gateway":"172.21.12.11"
                         }]
                 },
                 "Internal":true
@@ -108,6 +130,5 @@
 		});
 	}).done();
     };
-
 }());
 

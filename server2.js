@@ -5,7 +5,7 @@ var runner = require('./metaparticle-docker.js')
 mp.service(
         "my-scatter-gather",
 	mp.scatter(3, function(data) {
-		return {"A": "a"};
+		return {"A": "c"};
 	},
 	function(responses) {
 		var merged = [];
