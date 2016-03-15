@@ -1,6 +1,6 @@
 var mp = require('./metaparticle');
-var runner = require('./metaparticle-docker');
-//var runner = require('./metaparticle-print');
+//var runner = require('./metaparticle-docker');
+var runner = require('./metaparticle-print');
 
 mp.service(
     "simple-service",
