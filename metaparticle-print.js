@@ -9,6 +9,10 @@
         recursivePrint([], services);
     };
 
+    module.exports.run = function(services) {
+        recursivePrint([], services);
+    }
+
     module.exports.getHostname = function(serviceName, shard) {
 	return serviceName + '.' + shard;
     };

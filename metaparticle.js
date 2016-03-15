@@ -135,11 +135,14 @@
 
     module.exports.serve = function(runner) {
         runEnvironment = runner;
+	var cmd = process.argv[2];
         if (process.argv[2] == 'serve') {
             console.log(handlers);
             var server = jayson.server(handlers);
             server.http().listen(parseInt(process.argv[3]));
-        } else {
+        } else if (cmd == 'delete') {
+            runner.delete(services);		
+	} else {
             var promise = runner.build();
             promise.then(function() {
                 runner.run(services);
