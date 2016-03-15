@@ -1,0 +1,24 @@
+{
+  "name": "metaparticle",
+  "version": "0.0.1",
+  "description": "Metaparticle: Compile your infrastructure!",
+  "main": "metaparticle.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha test",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "infrastructure",
+    "server"
+  ],
+  "author": "Brendan Burns",
+  "license": "Apache-2.0",
+  "config": {
+    "blanket": {
+      "pattern": ""
+    }
+  }
+}
