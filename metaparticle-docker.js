@@ -1,5 +1,6 @@
 (function() {
     var q = require('q');
+    var path = require('path');
     var docker = require('dockerode');
     var client = new docker({socketPath: '/var/run/docker.sock'});
 
@@ -11,17 +12,14 @@
         var tar = require('tar-fs');
 	var defer = q.defer();
 	var tarStream = tar.pack(process.cwd());
-	console.log("starting build");
 	client.buildImage(tarStream, {
 	  t: 'brendandburns/metaparticle'
 	}, function(err, output) {
 	  if (err) {
 	     defer.reject(err);
 	  } else {
-             console.log("build started");
 	     output.pipe(process.stdout, {end: true});
              output.on('end', function() {
-		 console.log("build success");
 	         defer.resolve(null);
 	     });
 	  }
@@ -88,7 +86,7 @@
 	client.createContainer(
 	{
 		Image: 'brendandburns/metaparticle',
-		Cmd: ['node', '/server2.js', 'serve', '3000'],
+		Cmd: ['node', '/' + path.basename(process.argv[1]), 'serve', '3000'],
 		name: name,
 	        ExposedPorts: {
                         '3000/tcp': {}

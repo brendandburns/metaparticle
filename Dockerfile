@@ -6,6 +6,7 @@ RUN npm install dockerode
 
 ADD metaparticle.js /metaparticle.js
 ADD metaparticle-docker.js /metaparticle-docker.js
+ADD metaparticle-util.js /metaparticle-util.js
 ADD server.js /server.js
 ADD server2.js /server2.js
 ADD client.js /client.js
