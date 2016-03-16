@@ -19,20 +19,21 @@
      * Run the described application
      */
     module.exports.run = function(services) {
-        recursiveRun([], services);
+        recursiveFn([], services, runKubernetesService);
     };
 
-    var recursiveRun = function(prefix, services) {
+    var recursiveFn = function(prefix, services, fn) {
         if (!services) {
             return;
         }
         for (var key in services) {
             var service = services[key];
             if (!service.subservices) {
-                runKubernetesService(service);
+		// TODO: this should really generate the full name
+                fn(service);
             } else {
                 prefix.push(service.name);
-                recursiveRun(prefix, service.subservices);
+                recursiveFn(prefix, service.subservices, fn);
                 prefix.pop();
             }
         }
@@ -49,13 +50,15 @@
                 'replicas': service.replicas,
                 'template': {
                     'metadata': {
-                        'app': service.name
+			'labels': {
+                        	'app': service.name
+			}
                     },
                     'spec': {
                         'containers': [{
                             'name': service.name,
-                            'image': 'brendandburns/metaparticle',
-                            'cmd': ['node', path.basename(process.argv[1]), 'serve'],
+                            'image': '10.0.0.1:brendanburns/metaparticle',
+                            'command': ['node', path.basename(process.argv[1]), 'serve'],
                             'ports': [{
                                 'containerPort': 3000
                             }]
@@ -91,16 +94,15 @@
     }
 
     var runKubernetesService = function(service) {
-        runKubernetesCommand('kubectl create -f', makeDeployment(service));
-	runKubernetesCommand('kubectl create -f', makeService(service));
+        runKubernetesCommand('kubectl create -f -', makeDeployment(service));
+	runKubernetesCommand('kubectl create -f -', makeService(service));
     };
 
     var runKubernetesCommand = function(cmd, obj) {
-	// TODO: use real command here
-        var child = exec.exec('cat', {}, function(err, stdout, stderr) {
-            console.log(`stdout: ${stdout}`);
-            console.log(`stderr: ${stderr}`);
+        var child = exec.exec(cmd, {}, function(err, stdout, stderr) {
+            console.log(`${stdout}`);
             if (err !== null) {
+                console.log(`stderr: ${stderr}`);
                 console.log(`exec error: ${err}`);
             }
         });
@@ -113,8 +115,12 @@
      * Delete the described application
      */
     module.exports.delete = function(services) {
-	runKubernetesCommand('kubectl delete -f', makeDeployment(service));
-	runKubernetesCommand('kubectl delete -f', makeService(service));
+	recursiveFn([], services, deleteKubernetesService);
+    }
+
+    var deleteKubernetesService = function(service) {
+	runKubernetesCommand('kubectl delete -f -', makeDeployment(service));
+	runKubernetesCommand('kubectl delete -f -', makeService(service));
     };
 
     /**
