@@ -1,6 +1,7 @@
 var mp = require('./metaparticle');
-var runner = require('./metaparticle-print.js')
-//var runner = require('./metaparticle-docker.js')
+//var runner = require('./metaparticle-print.js');
+//var runner = require('./metaparticle-docker.js');
+var runner = require('./metaparticle-kubernetes.js');
 
 mp.service(
         "my-scatter-gather",
