@@ -6,13 +6,26 @@
     var exec = require('child_process');
 
     var util = require('./metaparticle-util');
+    var docker = require('./metaparticle-docker');
 
     /**
      * Build all images described in this application
      * @returns A promise (using 'q') that is completed when the build is done.
      */
     module.exports.build = function() {
-        return q.fcall(function() {});
+        var name = 'brendanburns/metaparticle'
+        var host = '192.168.0.150';
+
+        var defer = q.defer();
+        docker.buildImage(host + ":5000/" + name, process.cwd()).then(function() {
+            docker.pushImage(name, host + ":5000").then(function(data) {
+                defer.resolve(data);
+            }, function(err) {
+                defer.reject(err);
+            })
+        }).done();
+
+	return defer.promise;
     };
 
     /**
@@ -29,7 +42,7 @@
         for (var key in services) {
             var service = services[key];
             if (!service.subservices) {
-		// TODO: this should really generate the full name
+                // TODO: this should really generate the full name
                 fn(service);
             } else {
                 prefix.push(service.name);
@@ -40,6 +53,7 @@
     }
 
     var makeDeployment = function(service) {
+	var port = 3000;
         var deployment = {
             'apiVersion': 'extensions/v1beta1',
             'kind': 'Deployment',
@@ -50,17 +64,17 @@
                 'replicas': service.replicas,
                 'template': {
                     'metadata': {
-			'labels': {
-                        	'app': service.name
-			}
+                        'labels': {
+                            'app': service.name
+                        }
                     },
                     'spec': {
                         'containers': [{
                             'name': service.name,
-                            'image': '10.0.0.1:brendanburns/metaparticle',
-                            'command': ['node', path.basename(process.argv[1]), 'serve'],
+                            'image': '10.0.0.1:5000/brendanburns/metaparticle',
+                            'command': ['node', path.basename(process.argv[1]), 'serve', '' + port],
                             'ports': [{
-                                'containerPort': 3000
+                                'containerPort': port 
                             }]
                         }]
                     }
@@ -68,7 +82,7 @@
             }
         };
 
-	return deployment;
+        return deployment;
     }
 
     var makeService = function(service) {
@@ -90,12 +104,12 @@
             }
         }
 
-	return service;
+        return service;
     }
 
     var runKubernetesService = function(service) {
         runKubernetesCommand('kubectl create -f -', makeDeployment(service));
-	runKubernetesCommand('kubectl create -f -', makeService(service));
+        runKubernetesCommand('kubectl create -f -', makeService(service));
     };
 
     var runKubernetesCommand = function(cmd, obj) {
@@ -115,12 +129,12 @@
      * Delete the described application
      */
     module.exports.delete = function(services) {
-	recursiveFn([], services, deleteKubernetesService);
+        recursiveFn([], services, deleteKubernetesService);
     }
 
     var deleteKubernetesService = function(service) {
-	runKubernetesCommand('kubectl delete -f -', makeDeployment(service));
-	runKubernetesCommand('kubectl delete -f -', makeService(service));
+        runKubernetesCommand('kubectl delete -f -', makeDeployment(service));
+        runKubernetesCommand('kubectl delete -f -', makeService(service));
     };
 
     /**

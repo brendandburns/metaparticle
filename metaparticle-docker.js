@@ -11,11 +11,16 @@
     }
 
     module.exports.build = function() {
+        var img = 'brendandburns/metaparticle';
+        return buildImage(img, process.cwd());
+    }
+
+    module.exports.buildImage = function(name, dir) {
         var tar = require('tar-fs');
         var defer = q.defer();
-        var tarStream = tar.pack(process.cwd());
+        var tarStream = tar.pack(dir);
         client.buildImage(tarStream, {
-            t: 'brendandburns/metaparticle'
+            t: name
         }, function(err, output) {
             if (err) {
                 defer.reject(err);
@@ -29,13 +34,29 @@
             }
         });
         return defer.promise;
-    }
+    };
+
+    module.exports.pushImage = function(name, host) {
+        var defer = q.defer();
+        var img = client.getImage(name);
+        img.push({
+                'registry': host + ':5000'
+            },
+            function(err, data) {
+                if (err) {
+                    defer.reject(err);
+                } else {
+                    defer.resolve(data);
+                }
+            }, {});
+        return defer.promise;
+    };
 
     module.exports.delete = function(services) {
         var promise = recursiveDelete([], services);
-	promise.then(function() {
-		deleteNetwork('mp-network').done();
-	}).done();
+        promise.then(function() {
+            deleteNetwork('mp-network').done();
+        }).done();
     };
 
     var deleteNetwork = function(name) {
@@ -53,7 +74,7 @@
 
     var recursiveDelete = function(prefix, services) {
         var promises = [];
-	for (var key in services) {
+        for (var key in services) {
             var service = services[key];
             prefix.push(service.name);
             if (service.subservices) {
@@ -63,19 +84,19 @@
             }
             prefix.pop();
         }
-	return q.all(promises);
+        return q.all(promises);
     };
 
     var deleteDocker = function(service, name) {
-	var promises = [];
-	for (var i = 0; i < service.replicas; i++) {
-	   promises.push(deleteReplica(name + "." + i));
-	}
-	return q.all(promises);
+        var promises = [];
+        for (var i = 0; i < service.replicas; i++) {
+            promises.push(deleteReplica(name + "." + i));
+        }
+        return q.all(promises);
     };
 
     var deleteReplica = function(name) {
-    	var deferred = q.defer();
+        var deferred = q.defer();
         var container = client.getContainer(name);
 
         // todo, this should really be a chained promise.
@@ -92,7 +113,7 @@
                 });
             }
         });
-	return deferred.promise;
+        return deferred.promise;
     };
 
     module.exports.run = function(services) {
