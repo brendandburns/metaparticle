@@ -42,13 +42,19 @@
         img.push({
                 'registry': host + ':5000'
             },
-            function(err, data) {
+            function(err, output) {
                 if (err) {
                     defer.reject(err);
-                } else {
-                    defer.resolve(data);
+                    return;
                 }
-            }, {});
+                output.pipe(process.stdout, {
+                    end: true
+                });
+                output.on('end', function() {
+                    defer.resolve(null);
+                });
+            });
+
         return defer.promise;
     };
 

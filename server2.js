@@ -4,7 +4,7 @@ var mp = require('./metaparticle');
 var runner = require('./metaparticle-kubernetes.js');
 
 mp.service(
-        "my-scatter-gather",
+        "my-service",
 	mp.scatter(3, function(data) {
 		return {"A": "c"};
 	},

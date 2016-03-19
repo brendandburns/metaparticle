@@ -35,12 +35,12 @@
         return service;
     };
 
-    var requestPromise = function(serviceName, shard, data) {
+    var requestPromise = function(serviceName, method, shard, data) {
         var host = runEnvironment.getHostname(serviceName, shard);
         console.log("connecting to: " + host)
         var client = jayson.client.http("http://" + host + ":3000");
         var defer = q.defer();
-        client.request(serviceName, [data], function(err, response) {
+        client.request(method, [data], function(err, response) {
             if (err) {
                 console.log("Error contacting " + host + ": " + err);
                 defer.reject(err);
@@ -84,7 +84,7 @@
             fn: function(callback, data) {
                 var shard = shardingFn(data) % shards;
                 var serviceName = util.findServiceName(computeGUID, services);
-                var promise = requestPromise(serviceName, shard, data);
+                var promise = requestPromise(serviceName, 'shard', shard, data);
                 promise.then(function(data) {
                     callback(null, data);
                 }, function(err) {
@@ -120,7 +120,7 @@
                 var promises = [];
                 for (var i = 0; i < shards; i++) {
                     var serviceName = util.findServiceName(scatterGUID, services);
-                    promises.push(requestPromise(serviceName, i, data));
+                    promises.push(requestPromise(serviceName, 'scatter', i, data));
                 }
                 q.all(promises).then(
                     function(data) {

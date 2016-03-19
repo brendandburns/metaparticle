@@ -15,15 +15,22 @@
         module.exports.build = function() {
             var name = 'brendanburns/metaparticle'
             var host = '192.168.0.150';
+	    var img = host + ":5000/" + name;
 
             var defer = q.defer();
-            docker.buildImage(host + ":5000/" + name, process.cwd()).then(function() {
-                docker.pushImage(name, host + ":5000").then(function(data) {
+            docker.buildImage(img, process.cwd()).then(function() {
+		console.log('starting push');
+                docker.pushImage(img, host + ":5000").then(function(data) {
+		    console.log('push successful');
                     defer.resolve(data);
                 }, function(err) {
+		    console.log('Error pushing: ' + err);
                     defer.reject(err);
                 })
-            }).done();
+            }, function(err) {
+		console.log('Error building: ' + err);
+	    	defer.reject(err);
+	    }).done();
 
             return defer.promise;
         };
@@ -42,8 +49,7 @@
             for (var key in services) {
                 var service = services[key];
                 if (!service.subservices) {
-                    // TODO: this should really generate the full name
-                    fn(service);
+                    fn(prefix.join('-') + '-' + service.name, service);
                 } else {
                     prefix.push(service.name);
                     recursiveFn(prefix, service.subservices, fn);
@@ -52,36 +58,37 @@
             }
         }
 
-        var makeReplicationController = function(service, shard) {
+        var makeReplicationController = function(name, service, shard) {
 	    var port = 3000;
             var rc = {
                 "kind": "ReplicationController",
                 "apiVersion": "v1",
                 "metadata": {
-                    "name": service.name + "." + shard,
+                    "name": name + "." + shard,
                     "namespace": "default",
                     "labels": {
                         "shard": "" + shard,
-                        "service": service.name
+                        "service": name
                     }
                 },
                 "spec": {
                     "replicas": 1,
                     "selector": {
                         "shard": "" + shard,
-                        "service": service.name
+                        "service": name
                     },
                     "template": {
                         "metadata": {
                             "labels": {
                                 "shard": "" + shard,
-                                "service": service.name
+                                "service": name
                             }
                         },
                         "spec": {
                             "containers": [{
                                 'name': service.name,
                                 'image': '10.0.0.1:5000/brendanburns/metaparticle',
+				'imagePullPolicy': 'Always',
                                 'command': ['node', path.basename(process.argv[1]), 'serve', '' + port],
                                 'ports': [{
                                     'containerPort': port
@@ -96,20 +103,20 @@
             return rc;
         };
 
-        var makeDeployment = function(service) {
+        var makeDeployment = function(name, service) {
             var port = 3000;
             var deployment = {
                 'apiVersion': 'extensions/v1beta1',
                 'kind': 'Deployment',
                 'metadata': {
-                    'name': service.name
+                    'name': name
                 },
                 'spec': {
                     'replicas': service.replicas,
                     'template': {
                         'metadata': {
                             'labels': {
-                                'app': service.name
+                                'app': name
                             }
                         },
                         'spec': {
@@ -141,7 +148,7 @@
                     'ports': [{
                         'protocol': 'TCP',
                         'port': 3000,
-                        'targetPort': 2999
+                        'targetPort': 3000
                     }]
                 }
             }
@@ -149,21 +156,21 @@
             return service;
         }
 
-        var runKubernetesServiceDeployment = function(service) {
-            runKubernetesCommand('kubectl create -f -', makeDeployment(service));
-            runKubernetesCommand('kubectl create -f -', makeService(service.name, {
-                'app': service.name
+        var runKubernetesServiceDeployment = function(name, service) {
+            runKubernetesCommand('kubectl create -f -', makeDeployment(name, service));
+            runKubernetesCommand('kubectl create -f -', makeService(name, {
+                'app': name
             }));
         };
 
-        var runKubernetesServiceReplicationController = function(service) {
+        var runKubernetesServiceReplicationController = function(name, service) {
             for (var i = 0; i < service.replicas; i++) {
                 labels = {
-                    'service': service.name,
+                    'service': name,
                     'shard': '' + i
                 }
-                runKubernetesCommand('kubectl create -f -', makeReplicationController(service, i));
-                runKubernetesCommand('kubectl create -f -', makeService(getHostname(service.name, i), labels));
+                runKubernetesCommand('kubectl create -f -', makeReplicationController(name, service, i));
+                runKubernetesCommand('kubectl create -f -', makeService(name + '-' + i, labels));
             }
         };
 
@@ -187,19 +194,19 @@
             recursiveFn([], services, deleteKubernetesServiceReplicationController);
         }
 
-        var deleteKubernetesServiceDeployment = function(service) {
-            runKubernetesCommand('kubectl delete -f -', makeDeployment(service));
-            runKubernetesCommand('kubectl delete -f -', makeService(service.name, {
-                'app': service.name
+        var deleteKubernetesServiceDeployment = function(name, service) {
+            runKubernetesCommand('kubectl delete -f -', makeDeployment(name, service));
+            runKubernetesCommand('kubectl delete -f -', makeService(name, {
+                'app': name
             }));
         };
 
-        var deleteKubernetesServiceReplicationController = function(service) {
+        var deleteKubernetesServiceReplicationController = function(name, service) {
             for (var i = 0; i < service.replicas; i++) {
-                runKubernetesCommand('kubectl delete -f -', makeReplicationController(service, i));
-                runKubernetesCommand('kubectl delete -f -', makeService(getHostname(service.name, i), {}));
-                }
-            };
+                runKubernetesCommand('kubectl delete -f -', makeReplicationController(name, service, i));
+                runKubernetesCommand('kubectl delete -f -', makeService(name + '-' + i, {}));
+       	    }
+        };
 
             /**
              * Get the hostname of a shard in a particular service.
@@ -208,6 +215,6 @@
              * @param {number} shard The integer number of the shard
              */
             module.exports.getHostname = function(serviceName, shard) {
-                return servinceName + '-' + shard;
+                return serviceName.replace('.', '-') + '-' + shard + '.default.svc';
             };
         }());
