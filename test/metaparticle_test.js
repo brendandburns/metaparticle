@@ -35,6 +35,39 @@ describe('service', function() {
 		test.array(calls).is(['main', 'callback']);
 	});
 
+	it('should scatter/gather', function() {
+		var serviceShards = [];
+		var hosts = [];
+		mp.injectClientFactoryForTesting(function(host) {
+			hosts.push(host);
+			return {
+				request: function(method, request, callback) {
+					test.string(method).is('scatter');
+					callback(null, request);
+				}
+			};
+		});
+		mp.injectRunEnvironmentForTesting({
+			getHostname: function(service, shard) {
+				serviceShards.push({'service': service, 'shard': shard});
+				return service + "." + shard;
+			}
+		});
+
+		var service = mp.scatter(3, function(data) {
+			return data;
+		}, function(list) {
+			return list;
+		});
+
+		service.fn(function(err, data) {
+			test.number(data.length).is(3);
+			// test values here.
+		}, {'foo': 'bar'});
+
+		test.number(hosts.length).is(3);
+		// test values here
+	});
 });
 
 	

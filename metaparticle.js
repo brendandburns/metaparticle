@@ -35,10 +35,22 @@
         return service;
     };
 
+    module.exports.injectRunEnvironmentForTesting = function(env) {
+        runEnvironment = env;
+    }
+
+    module.exports.injectClientFactoryForTesting = function(factory) {
+        makeClient = factory;
+    };
+
+    var makeClient = function(host) {
+        return jayson.client.http(host)
+    }
+
     var requestPromise = function(serviceName, method, shard, data) {
         var host = runEnvironment.getHostname(serviceName, shard);
         console.log("connecting to: " + host)
-        var client = jayson.client.http("http://" + host + ":3000");
+        var client = makeClient("http://" + host + ":3000");
         var defer = q.defer();
         client.request(method, [data], function(err, response) {
             if (err) {
