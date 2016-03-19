@@ -7,5 +7,5 @@ var client = jayson.client.http({
 
 client.request(process.argv[2], [{'foo': 'bar'}], function(err, response) {
   if(err) throw err;
-  console.log(response.result); // 2
+  console.log(JSON.stringify(response.result)); 
 });

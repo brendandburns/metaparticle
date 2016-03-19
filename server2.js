@@ -1,12 +1,10 @@
 var mp = require('./metaparticle');
-//var runner = require('./metaparticle-print.js');
-//var runner = require('./metaparticle-docker.js');
-var runner = require('./metaparticle-kubernetes.js');
+var os = require('os');
 
 mp.service(
         "my-service",
 	mp.scatter(3, function(data) {
-		return {"A": "c"};
+		return {"A": os.networkInterfaces()};
 	},
 	function(responses) {
 		var merged = [];
@@ -16,4 +14,4 @@ mp.service(
 		return merged;
        }));
 
-mp.serve(runner);
+mp.serve();

@@ -133,19 +133,27 @@
         };
     };
 
-    module.exports.serve = function(runner) {
-        runEnvironment = runner;
-	var cmd = process.argv[2];
-        if (process.argv[2] == 'serve') {
+    module.exports.serve = function() {
+        var argv = require('minimist')(process.argv.slice(2));
+        var runSpec = argv['runner'];
+        if (!runSpec || runSpec.length == 0) {
+            runSpec = 'kubernetes';
+        }
+        runEnvironment = require('./metaparticle-' + runSpec);
+        var cmd = '';
+        if (argv._ && argv._.length > 0) {
+            cmd = argv._[0];
+        }
+        if (cmd == 'serve') {
             console.log(handlers);
             var server = jayson.server(handlers);
-            server.http().listen(parseInt(process.argv[3]));
+            server.http().listen(parseInt(argv._[1]));
         } else if (cmd == 'delete') {
-            runner.delete(services);		
-	} else {
-            var promise = runner.build();
+            runEnvironment.delete(services);
+        } else {
+            var promise = runEnvironment.build();
             promise.then(function() {
-                runner.run(services);
+                runEnvironment.run(services);
             }).done();
         }
     };
