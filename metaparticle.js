@@ -3,6 +3,7 @@
     var jayson = require('jayson');
     var q = require('q');
     var util = require('./metaparticle-util.js')
+    var log = require('loglevel');
 
     // implementation
     // Passed on to jayson, probably can be eliminated
@@ -49,12 +50,12 @@
 
     var requestPromise = function(serviceName, method, shard, data) {
         var host = runEnvironment.getHostname(serviceName, shard);
-        console.log("connecting to: " + host)
+        log.debug("connecting to: " + host)
         var client = makeClient("http://" + host + ":3000");
         var defer = q.defer();
         client.request(method, [data], function(err, response) {
             if (err) {
-                console.log("Error contacting " + host + ": " + err);
+                log.error("Error contacting " + host + ": " + err);
                 defer.reject(err);
             } else {
                 defer.resolve(response.result);
@@ -87,7 +88,7 @@
                     'fn': function(data) {
                         return data;
                     },
-                    'guid': makeGUID(),
+                    'guid': util.makeGUID(),
                     'depends': ['compute'],
                     'replicas': 1
                 }
@@ -151,13 +152,33 @@
         if (!runSpec || runSpec.length == 0) {
             runSpec = 'kubernetes';
         }
+        var logSpec = argv['logging'];
+        if (logSpec) {
+            switch (logSpec) {
+                case 'trace':
+                    log.setLevel(log.levels.TRACE);
+                    break;
+                case 'debug':
+                    log.setLevel(log.levels.DEBUG);
+                    break;
+                case 'silent':
+                    log.setLevel(log.levels.SILENT);
+                    break;
+                default:
+                    log.warn('unknown log level: ' + logSpec + ' defaulting to INFO and up.');
+                    log.setLevel(log.levels.INFO);
+            }
+        } else {
+	    log.info('setting log level to INFO, override with --logging.');
+            log.setLevel(log.levels.INFO);
+        }
         runEnvironment = require('./metaparticle-' + runSpec);
         var cmd = '';
         if (argv._ && argv._.length > 0) {
             cmd = argv._[0];
         }
         if (cmd == 'serve') {
-            console.log(handlers);
+            log.info(handlers);
             var server = jayson.server(handlers);
             server.http().listen(parseInt(argv._[1]));
         } else if (cmd == 'delete') {
