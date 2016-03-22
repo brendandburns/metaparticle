@@ -2,6 +2,7 @@
     var q = require('q');
     var path = require('path');
     var docker = require('dockerode');
+    var log = require('loglevel');
     var client = new docker({
         socketPath: '/var/run/docker.sock'
     });
@@ -12,7 +13,7 @@
 
     module.exports.build = function() {
         var img = 'brendandburns/metaparticle';
-        return buildImage(img, process.cwd());
+        return module.exports.buildImage(img, process.cwd());
     }
 
     module.exports.buildImage = function(name, dir) {
@@ -144,7 +145,7 @@
             "Internal": true
         }, function(err, data) {
             if (err) {
-                console.log("Error creating network: " + err);
+                log.error("Error creating network: " + err);
                 deferred.reject(err);
             } else {
                 deferred.resolve(data);
@@ -188,7 +189,7 @@
             },
             function(err, container) {
                 if (err) {
-                    console.log('error creating: ' + err);
+                    log.error('error creating: ' + err);
                     deferred.reject(err);
                 } else {
                     deferred.resolve(container);
@@ -203,7 +204,7 @@
                     },
                     function(err, data) {
                         if (err) {
-                            console.log(err);
+                            log.error('error starting container: ' + err);
                             deferred2.reject(err);
                         } else {
                             deferred2.resolve(container);
@@ -216,7 +217,7 @@
                     "Container": data.id
                 }, function(err, data) {
                     if (err) {
-                        console.log(err);
+                        log.error('error connecting network: ' + err);
                     }
                 });
             }).done();
