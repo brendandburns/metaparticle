@@ -28,7 +28,7 @@
         var defer = q.defer();
         docker.buildImage(img, process.cwd()).then(function() {
             log.debug('starting push');
-            docker.pushImage(img, host + ":" registryPort).then(function(data) {
+            docker.pushImage(img, host + ":" + registryPort).then(function(data) {
                 log.debug('push successful');
                 defer.resolve(data);
             }, function(err) {
@@ -57,7 +57,11 @@
         for (var key in services) {
             var service = services[key];
             if (!service.subservices) {
-                fn(prefix.join('-') + '-' + service.name, service);
+	        var prefixStr = ''
+		if (prefix.length > 0) {
+		  prefixStr = prefix.join('-') + '-';
+		}
+                fn(prefixStr + service.name, service);
             } else {
                 prefix.push(service.name);
                 recursiveFn(prefix, service.subservices, fn);
@@ -95,9 +99,9 @@
                     "spec": {
                         "containers": [{
                             'name': service.name,
-                            'image': serverHost + ':' + registryPort '/' + name,
+                            'image': serverHost + ':' + registryPort + '/' + name,
                             'imagePullPolicy': 'Always',
-                            'command': ['node', path.basename(process.argv[1]), 'serve', '' + port],
+                            'command': ['node', path.basename(process.argv[1]), '--runner=kubernetes', 'serve', '' + port],
                             'ports': [{
                                 'containerPort': port
                             }]
@@ -131,7 +135,7 @@
                         'containers': [{
                             'name': service.name,
 			    'image': serverHost + ':' + registryPort + '/' + name,
-                            'command': ['node', path.basename(process.argv[1]), 'serve', '' + port],
+                            'command': ['node', path.basename(process.argv[1]), '--runner=kubernetes', 'serve', '' + port],
                             'ports': [{
                                 'containerPort': port
                             }]

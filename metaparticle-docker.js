@@ -181,7 +181,7 @@
         var deferred = q.defer();
         client.createContainer({
                 Image: 'brendandburns/metaparticle',
-                Cmd: ['node', '/' + path.basename(process.argv[1]), 'serve', '3000'],
+                Cmd: ['node', '/' + path.basename(process.argv[1]), '--runner=docker', 'serve', '3000'],
                 name: name,
                 ExposedPorts: {
                     '3000/tcp': {}
