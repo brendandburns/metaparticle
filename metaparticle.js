@@ -13,6 +13,8 @@
     // Canonical list of defined services 
     var services = {};
 
+    module.exports.global = {};
+
     module.exports.service = function(name, fn) {
         var service = {
             'name': name,
