@@ -2,7 +2,9 @@ FROM hypriot/rpi-node:4.3.0-slim
 
 RUN npm install jayson
 RUN npm install q
+# TODO: These can be removed with some refactoring
 RUN npm install dockerode
+RUN npm install loglevel
 
 ADD metaparticle.js /metaparticle.js
 ADD metaparticle-docker.js /metaparticle-docker.js
