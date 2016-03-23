@@ -10,6 +10,8 @@
     var handlers = [];
     // Forward reference to the runner implementation
     var runEnvironment;
+    // Forward reference to the storage implementation
+    var storageEnvironment;
     // Canonical list of defined services 
     var services = {};
 
@@ -154,6 +156,10 @@
         if (!runSpec || runSpec.length == 0) {
             runSpec = 'kubernetes';
         }
+	var storeSpec = argv['storage'];
+	if (!storeSpec || storeSpec.length == 0) {
+	    storeSpec = 'file';
+	}
         var logSpec = argv['logging'];
         if (logSpec) {
             switch (logSpec) {
@@ -175,12 +181,41 @@
             log.setLevel(log.levels.INFO);
         }
         runEnvironment = require('./metaparticle-' + runSpec);
+	storeEnvironment = require('./metaparticle-' + storeSpec + '-storage.js');
         var cmd = '';
         if (argv._ && argv._.length > 0) {
             cmd = argv._[0];
         }
         if (cmd == 'serve') {
             log.info(handlers);
+
+            for (var key in handlers) {
+	       var handlerFn = handlers[key];
+	       handlers[key] = function(args, callback) {
+		 log.debug('calling load');
+	         storeEnvironment.load('global').then(function(data) {
+		   module.exports.global = data.data;
+		   log.debug('calling handler');
+		   handlerFn(args, function(err, fnData) {
+	             if (err) {
+		       callback(err, null);
+		       return;
+		     }
+		     log.debug('storing data');
+		     data.data = module.exports.global;
+		     storeEnvironment.store('global', data).then(function() {
+		       callback(null, fnData);
+		     }, function(err) {
+		       callback(err, null);
+		     });
+		   })
+		 }, function(err) {
+                    log.error('error: ' + err);
+		    callback(err, null);
+		 }).done();
+	       }
+	    }
+
             var server = jayson.server(handlers);
             server.http().listen(parseInt(argv._[1]));
         } else if (cmd == 'delete') {
