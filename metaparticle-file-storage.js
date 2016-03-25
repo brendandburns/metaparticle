@@ -28,35 +28,34 @@
      */
     module.exports.load = function(scope) {
         var deferred = q.defer();
-	var path = scope + ".json";
-	// TODO: make this async too
-	var stats = null;
-	try {
-		stats = fs().statSync(path);
-	} catch (err) {
-	        if (err.code != 'ENOENT') {
-		  deferred.reject(err);
-		  return;
-		}
-	}
-	console.log(JSON.stringify(stats));
-        fs().readFile(path, function(err, data) {
+        var path = scope + ".json";
+        // TODO: make this async too
+        var stats = null;
+        try {
+            stats = fs().statSync(path);
+        } catch (err) {
+            if (err.code != 'ENOENT') {
+                deferred.reject(err);
+                return deferred.promise;
+            }
+        }
+        fs().readFile(path, 'utf-8', function(err, data) {
             if (err) {
-		if (err.code == 'ENOENT') {
-		  deferred.resolve({
-		    'data': {},
-		    'version': 'empty'
-		  });
-		} else {
-                  deferred.reject(err);
-		}
+                if (err.code == 'ENOENT') {
+                    deferred.resolve({
+                        'data': {},
+                        'version': 'empty'
+                    });
+                } else {
+                    deferred.reject(err);
+                }
             } else {
                 try {
                     var obj = JSON.parse(data);
                     deferred.resolve({
-			    'data': obj,
-		            'version': stats.mtime,
-	            });
+                        'data': obj,
+                        'version': stats.mtime,
+                    });
                 } catch (ex) {
                     deferred.reject(ex);
                 }
@@ -73,6 +72,32 @@
      */
     module.exports.store = function(scope, data) {
         var deferred = q.defer();
+        // TODO: make this async too                                                                                                  
+        var stats = null;
+	var empty = false;
+	var path = scope + '.json';
+        try {
+            stats = fs().statSync(path);
+        } catch (err) {
+            if (err.code != 'ENOENT') {
+                deferred.reject(err);
+                return deferred.promise;
+            } else {
+	        empty = true;
+	    }
+        }
+
+	if (empty) {
+		if (data.version != 'empty') {
+			deferred.resolve(false);	
+		}
+	} else {
+		if (data.version != stats.m_time) {
+			deferred.resolve(false);	
+		}
+	}
+
+
         var str = JSON.stringify(data.data);
         fs().writeFile(scope + ".json", str, function(err) {
             if (err) {
