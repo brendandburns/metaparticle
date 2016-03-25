@@ -1,5 +1,6 @@
 (function() {
     var q = require('q');
+    var log = require('loglevel');
 
     var file = null;
 
@@ -89,10 +90,12 @@
 
 	if (empty) {
 		if (data.version != 'empty') {
+			log.warn('version is not empty but file does not exist');
 			deferred.resolve(false);	
 		}
 	} else {
-		if (data.version != stats.m_time) {
+		if (!data.version == stats.m_time) {
+			log.warn('versions do not match: %' + data.version + '% vs %' + stats.mtime + '%');
 			deferred.resolve(false);	
 		}
 	}

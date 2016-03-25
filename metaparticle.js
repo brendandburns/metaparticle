@@ -150,16 +150,54 @@
         };
     };
 
+    var wrapHandler = function(handlerFn) {
+        var failures = 0;
+        var fn = function(args, callback) {
+            log.debug('calling load');
+            storeEnvironment.load('global').then(function(data) {
+                module.exports.global = data.data;
+                log.debug('calling handler');
+                handlerFn(args, function(err, fnData) {
+                    if (err) {
+                        callback(err, null);
+                        return;
+                    }
+                    log.debug('storing data');
+                    data.data = module.exports.global;
+                    storeEnvironment.store('global', data).then(function(success) {
+                        log.debug('status: ' + success);
+                        if (success) {
+                            callback(null, fnData);
+                        } else if (failures < 5) {
+                            failures++;
+                            setTimeout(function() {
+                                fn(args, callback);
+                            }, 1000);
+                        } else {
+                            callback(new Error('failed to store data'), null);
+                        }
+                    }, function(err) {
+                        callback(err, null);
+                    });
+                })
+            }, function(err) {
+                log.error('error: ' + err);
+                callback(err, null);
+            }).done();
+        };
+        return fn;
+    }
+
     module.exports.serve = function() {
         var argv = require('minimist')(process.argv.slice(2));
         var runSpec = argv['runner'];
         if (!runSpec || runSpec.length == 0) {
             runSpec = 'kubernetes';
         }
-	var storeSpec = argv['storage'];
-	if (!storeSpec || storeSpec.length == 0) {
-	    storeSpec = 'file';
-	}
+        var storeSpec = argv['storage'];
+        if (!storeSpec || storeSpec.length == 0) {
+            storeSpec = 'file';
+        }
         var logSpec = argv['logging'];
         if (logSpec) {
             switch (logSpec) {
@@ -177,11 +215,11 @@
                     log.setLevel(log.levels.INFO);
             }
         } else {
-	    log.info('setting log level to INFO, override with --logging.');
+            log.info('setting log level to INFO, override with --logging.');
             log.setLevel(log.levels.INFO);
         }
         runEnvironment = require('./metaparticle-' + runSpec);
-	storeEnvironment = require('./metaparticle-' + storeSpec + '-storage.js');
+        storeEnvironment = require('./metaparticle-' + storeSpec + '-storage.js');
         var cmd = '';
         if (argv._ && argv._.length > 0) {
             cmd = argv._[0];
@@ -190,31 +228,9 @@
             log.info(handlers);
 
             for (var key in handlers) {
-	       var handlerFn = handlers[key];
-	       handlers[key] = function(args, callback) {
-		 log.debug('calling load');
-	         storeEnvironment.load('global').then(function(data) {
-		   module.exports.global = data.data;
-		   log.debug('calling handler');
-		   handlerFn(args, function(err, fnData) {
-	             if (err) {
-		       callback(err, null);
-		       return;
-		     }
-		     log.debug('storing data');
-		     data.data = module.exports.global;
-		     storeEnvironment.store('global', data).then(function() {
-		       callback(null, fnData);
-		     }, function(err) {
-		       callback(err, null);
-		     });
-		   })
-		 }, function(err) {
-                    log.error('error: ' + err);
-		    callback(err, null);
-		 }).done();
-	       }
-	    }
+                var handlerFn = handlers[key];
+                handlers[key] = wrapHandler(handlerFn);
+            }
 
             var server = jayson.server(handlers);
             server.http().listen(parseInt(argv._[1]));
