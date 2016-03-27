@@ -7,10 +7,5 @@ RUN npm install minimist
 RUN npm install dockerode
 RUN npm install loglevel
 
-ADD metaparticle.js /metaparticle.js
-ADD metaparticle-docker.js /metaparticle-docker.js
-ADD metaparticle-kubernetes.js /metaparticle-kubernetes.js
-ADD metaparticle-util.js /metaparticle-util.js
-ADD server.js /server.js
-ADD server2.js /server2.js
-ADD client.js /client.js
+ADD *js /
+
