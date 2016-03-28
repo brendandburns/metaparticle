@@ -1,11 +1,15 @@
 // The interface for a metaparticle implementation.
 // Not expected to be used, just for documentation
 (function() {
+    // builtins
     var path = require('path');
-    var q = require('q');
     var exec = require('child_process');
+
+    // installed
+    var q = require('q');
     var log = require('loglevel');
 
+    // local
     var util = require('./metaparticle-util');
     var docker = require('./metaparticle-docker');
 
@@ -101,7 +105,7 @@
                             'name': service.name,
                             'image': serverHost + ':' + registryPort + '/' + name,
                             'imagePullPolicy': 'Always',
-                            'command': ['node', path.basename(process.argv[1]), '--runner=kubernetes', 'serve', '' + port],
+                            'command': ['node', '--harmony-proxies', path.basename(process.argv[1]), '--runner=kubernetes', 'serve', '' + port],
                             'ports': [{
                                 'containerPort': port
                             }]
@@ -135,7 +139,7 @@
                         'containers': [{
                             'name': service.name,
 			    'image': serverHost + ':' + registryPort + '/' + name,
-                            'command': ['node', path.basename(process.argv[1]), '--runner=kubernetes', 'serve', '' + port],
+                            'command': ['node', '--harmony-proxies', path.basename(process.argv[1]), '--runner=kubernetes', 'serve', '' + port],
                             'ports': [{
                                 'containerPort': port
                             }]

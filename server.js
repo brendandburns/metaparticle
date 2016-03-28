@@ -1,10 +1,11 @@
 var mp = require('./metaparticle');
 
-mp.service(
+var service = mp.service(
     "simple-service",
     function(request) {
 	return {"A": request};
     }
 );
+service.expose = true;
 
 mp.serve();

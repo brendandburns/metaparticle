@@ -1,11 +1,22 @@
 (function() {
-    var q = require('q');
+    // builtins
     var path = require('path');
-    var docker = require('dockerode');
+
+    // installed
+    var q = require('q');
     var log = require('loglevel');
-    var client = new docker({
-        socketPath: '/var/run/docker.sock'
-    });
+
+    var c = null;
+
+    var client = function() {
+        if (c == null) {
+            var docker = require('dockerode');
+            c = new docker({
+                socketPath: '/var/run/docker.sock'
+            });
+        }
+        return c;
+    }
 
     module.exports.getHostname = function(serviceName, shard) {
         return serviceName + '.' + shard;
@@ -20,7 +31,7 @@
         var tar = require('tar-fs');
         var defer = q.defer();
         var tarStream = tar.pack(dir);
-        client.buildImage(tarStream, {
+        client().buildImage(tarStream, {
             t: name
         }, function(err, output) {
             if (err) {
@@ -39,7 +50,7 @@
 
     module.exports.pushImage = function(name, host) {
         var defer = q.defer();
-        var img = client.getImage(name);
+        var img = client().getImage(name);
         img.push({
                 'registry': host + ':5000'
             },
@@ -68,7 +79,7 @@
 
     var deleteNetwork = function(name) {
         var deferred = q.defer();
-        var network = client.getNetwork(name);
+        var network = client().getNetwork(name);
         network.remove({}, function(err, data) {
             if (err) {
                 deferred.reject(err);
@@ -104,7 +115,7 @@
 
     var deleteReplica = function(name) {
         var deferred = q.defer();
-        var container = client.getContainer(name);
+        var container = client().getContainer(name);
 
         // todo, this should really be a chained promise.
         container.kill({}, function(err, data) {
@@ -132,7 +143,7 @@
 
     var createNetwork = function(name) {
         var deferred = q.defer();
-        client.createNetwork({
+        client().createNetwork({
             "Name": name,
             "Driver": "bridge",
             "IPAM": {
@@ -179,9 +190,9 @@
 
     var runReplica = function(service, name, network) {
         var deferred = q.defer();
-        client.createContainer({
+        client().createContainer({
                 Image: 'brendandburns/metaparticle',
-                Cmd: ['node', '/' + path.basename(process.argv[1]), '--runner=docker', 'serve', '3000'],
+                Cmd: ['node', '--harmony-proxies', '/' + path.basename(process.argv[1]), '--runner=docker', 'serve', '3000'],
                 name: name,
                 ExposedPorts: {
                     '3000/tcp': {}
@@ -199,9 +210,15 @@
         var deferred2 = q.defer();
         deferred.promise.then(
             function(container) {
-                container.start({
-                        //"PortBindings": { "3000/tcp": [{ "HostPort": "3000" }] }
-                    },
+                var startOpts = {};
+                if (service.expose) {
+                    startOpts.PortBindings = {
+                        '3000/tcp': [{
+                            'HostPort': '3000'
+                        }]
+                    };
+                }
+                container.start(startOpts,
                     function(err, data) {
                         if (err) {
                             log.error('error starting container: ' + err);

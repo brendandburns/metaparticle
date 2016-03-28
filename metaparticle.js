@@ -14,8 +14,10 @@
     var storageEnvironment;
     // Canonical list of defined services 
     var services = {};
-
-    module.exports.global = {};
+    // Scope variables
+    module.exports.scope = {};
+    module.exports.scope.globalData = {};
+    module.exports.scope.globalDirty = false;
 
     module.exports.service = function(name, fn) {
         var service = {
@@ -155,30 +157,43 @@
         var fn = function(args, callback) {
             log.debug('calling load');
             storeEnvironment.load('global').then(function(data) {
-                module.exports.global = data.data;
+                var dirty = false;
+		var Proxy = require('harmony-proxy');
+
+                module.exports.scope.global = new Proxy(data.data, {
+                    set: function(target, property, value) {
+                        data.data[property] = value;
+                        dirty = true;
+                        return true;
+                    }
+                });
                 log.debug('calling handler');
                 handlerFn(args, function(err, fnData) {
                     if (err) {
                         callback(err, null);
                         return;
                     }
-                    log.debug('storing data');
-                    data.data = module.exports.global;
-                    storeEnvironment.store('global', data).then(function(success) {
-                        log.debug('status: ' + success);
-                        if (success) {
-                            callback(null, fnData);
-                        } else if (failures < 5) {
-                            failures++;
-                            setTimeout(function() {
-                                fn(args, callback);
-                            }, 1000);
-                        } else {
-                            callback(new Error('failed to store data'), null);
-                        }
-                    }, function(err) {
-                        callback(err, null);
-                    });
+                    if (dirty) {
+                        log.debug('storing data');
+                        storeEnvironment.store('global', data).then(function(success) {
+                            log.debug('status: ' + success);
+                            if (success) {
+                                callback(null, fnData);
+                            } else if (failures < 5) {
+                                failures++;
+                                setTimeout(function() {
+                                    fn(args, callback);
+                                }, 1000);
+                            } else {
+                                callback(new Error('failed to store data'), null);
+                            }
+                        }, function(err) {
+                            callback(err, null);
+                        });
+                    } else {
+                        log.debug('no changes');
+                        callback(null, fnData);
+                    }
                 })
             }, function(err) {
                 log.error('error: ' + err);

@@ -8,17 +8,14 @@ var gaussian = function(sigma, mean) {
     return n * sigma + mean;
 };
 
-
-mp.service(
+var svc = mp.service(
     "my-service",
     mp.scatter(10, function(data) {
-	    var numbers = [];
+	    var result = { 'n': [] };
 	    for (var i = 0; i < 100; i++) {
-	      numbers.push(gaussian(25, 100));
+	      result.n.push(gaussian(25, 100));
 	    }
-            return {
-                'n': numbers,
-            };
+	    return result;
         },
         function(responses) {
             var histogram = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -34,5 +31,6 @@ mp.service(
             }
             return histogram;
         }));
+svc.expose = true;
 
 mp.serve();
