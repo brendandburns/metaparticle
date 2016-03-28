@@ -13,8 +13,8 @@
         return c;
     };
 
-    module.exports.injectClientForTesting(client) {
-	    c = client;
+    module.exports.injectClientForTesting = function(client) {
+        c = client;
     }
 
     /**
@@ -51,9 +51,12 @@
             if (err) {
                 deferred.reject(err);
             }
+            if (res == null) {
+                res = 0;
+            }
             deferred.resolve({
                 'data': obj,
-                'version': res 
+                'version': res
             });
         });
 
@@ -67,15 +70,50 @@
      * @returns A promise that resolves with true if the storage succeeded, false otherwise.
      */
     module.exports.store = function(scope, data) {
-        var client = new redis({});
         var deferred = q.defer();
+
+        client().call('WATCH', 'version', function(err) {
+            if (err) {
+                deferred.reject(err);
+                return
+            }
+        });
+
+        client().call('GET', 'version', function(err, res) {
+            if (err) {
+                deferred.reject(err);
+                return;
+            }
+            if (res == null && data.version != "0") {
+                deferred.reject(new Error("version mismatch"));
+                return;
+            }
+            if (res != null && data.version != res) {
+                deferred.reject(new Error('version mismatch: ' + data.version + ' vs. ' + res));
+            }
+        })
 
         client().call('SET', 'value', JSON.stringify(data.data), function(err, res) {
             if (err) {
                 deferred.reject(err);
+                return;
             } else {
                 deferred.resolve(true);
             }
+        });
+
+        client().call('INCR', 'version', function(err) {
+            if (err) {
+                deferred.reject(err);
+            }
+        });
+
+        client().call('EXEC', function(err) {
+            if (err) {
+                deferred.reject(err);
+                return;
+            }
+            deferred.resolve(true);
         });
 
         return deferred.promise;
