@@ -15,20 +15,31 @@
 
     // Config
     // Docker registry to push to
-    var host = '192.168.0.150';
+    var host = process.env['DOCKER_REGISTRY'] 
     // Docker registry to pull from
-    var serverHost = '10.0.0.1';
+    var serverHost = process.env['DOCKER_IMAGE_REGISTRY'];
+    if (!serverHost) {
+        serverHost = host;
+    }
     var registryPort = 5000;
     
-    // name of the image
-    var name = 'brendanburns/metaparticle';
+    //
+    var namePrefix = 'metaparticle';
 
     /**
      * Build all images described in this application
      * @returns A promise (using 'q') that is completed when the build is done.
      */
-    module.exports.build = function() {
-        var img = host + ":" + registryPort + "/" + name;
+    module.exports.build = function(services) {
+        var promises = [];	
+        recursiveFn([], services, function(name) {
+		promises.push(buildImage(name));
+	});
+	return q.all(promises);
+    };
+
+    var buildImage = function(name) {
+        var img = host + ":" + registryPort + "/" + namePrefix + "/" + name;
         var defer = q.defer();
         docker.buildImage(img, process.cwd()).then(function() {
             log.debug('starting push');
@@ -103,7 +114,7 @@
                     "spec": {
                         "containers": [{
                             'name': service.name,
-                            'image': serverHost + ':' + registryPort + '/' + name,
+                            'image': serverHost + ':' + registryPort + '/' + namePrefix + '/' + name,
                             'imagePullPolicy': 'Always',
                             'command': ['node', '--harmony-proxies', path.basename(process.argv[1]), '--runner=kubernetes', 'serve', '' + port],
                             'ports': [{

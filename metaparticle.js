@@ -252,7 +252,7 @@
         } else if (cmd == 'delete') {
             runEnvironment.delete(services);
         } else {
-            var promise = runEnvironment.build();
+            var promise = runEnvironment.build(services);
             promise.then(function() {
                 runEnvironment.run(services);
             }).done();
