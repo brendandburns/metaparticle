@@ -12,7 +12,7 @@ Here is a canonical scatter/gather tree.  Each request that is received
 by the root, is sent out to every leaf.  All responses are aggregated on
 the root, and the aggregate response is passed back to the caller.
 
-![histogram service](scatter-gather.png)
+![histogram service](sg.png)
 
 In this particular case, each leaf simply returns 100 random numbers drawn
 from a Gaussian distribution.  The root then calculates the histogram
