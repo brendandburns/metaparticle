@@ -207,7 +207,7 @@
         var argv = require('minimist')(process.argv.slice(2));
         var runSpec = argv['runner'];
         if (!runSpec || runSpec.length == 0) {
-            runSpec = 'kubernetes';
+            runSpec = 'docker';
         }
         var storeSpec = argv['storage'];
         if (!storeSpec || storeSpec.length == 0) {
