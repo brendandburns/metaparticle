@@ -4,4 +4,5 @@ FROM node:4
 RUN npm install jayson q minimist loglevel harmony-proxy
 
 ADD *js /
+ADD examples/*js /
 

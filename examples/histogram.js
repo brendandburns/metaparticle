@@ -9,7 +9,7 @@ var gaussian = function(sigma, mean) {
 };
 
 var svc = mp.service(
-    "my-service",
+    "histogram-service",
     mp.scatter(10, function(data) {
 	    var result = { 'n': [] };
 	    for (var i = 0; i < 100; i++) {
@@ -31,6 +31,6 @@ var svc = mp.service(
             }
             return histogram;
         }));
-svc.expose = true;
+svc.subservices.gather.expose = true;
 
 mp.serve();
