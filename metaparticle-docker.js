@@ -22,8 +22,16 @@
         return serviceName + '.' + shard;
     }
 
+    // TODO: unify this code in one place.
+    var prefix = process.env['DOCKER_IMAGE_PREFIX'];
+    if (!prefix) {
+	    prefix = 'metaparticle';
+    }
+
+    var imageName = 'metaparticle';
+    
     module.exports.build = function() {
-        var img = 'brendandburns/metaparticle';
+        var img = prefix + '/' + imageName;
         return module.exports.buildImage(img, process.cwd());
     }
 
@@ -191,7 +199,7 @@
     var runReplica = function(service, name, network) {
         var deferred = q.defer();
         client().createContainer({
-                Image: 'brendandburns/metaparticle',
+                Image: prefix + '/' + imageName,
                 Cmd: ['node', '--harmony-proxies', '/' + path.basename(process.argv[1]), '--runner=docker', 'serve', '3000'],
                 name: name,
                 ExposedPorts: {

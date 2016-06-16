@@ -23,8 +23,11 @@
     }
     var registryPort = 5000;
     
-    //
-    var namePrefix = 'metaparticle';
+    // Load the name prefix or bail
+    var namePrefix = process.env['DOCKER_IMAGE_PREFIX'];
+    if (!namePrefix) {
+        namePrefix = 'metaparticle'
+    }
 
     /**
      * Build all images described in this application

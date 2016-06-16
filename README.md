@@ -34,7 +34,7 @@ $ node client.js simple-service
 $ node examples/server.js --runner=docker delete
 ```
 
-### A more complex service 
+## A more complex service 
 The previous example only turned up a single instance of a single service.
 
 Metaparticle is really about (re)using distributed system patterns.
@@ -46,40 +46,8 @@ the root, and the aggregate response is passed back to the caller.
 
 ## Distributed examples
 The previous examples are fun, but they don't really deploy beyond a single
-machine.  To deploy true distributed systems you need to use a container
-orcheastrator like [kubernetes](https://kubernetes.io).
-
-You will also need a container registry:
-
-```sh
-$ export DOCKER_REGISTRY=${MY_CONTAINER_REGISTRY_DOT_COM}
-```
-
-Where `MY_CONTAINER_REGISTRY_DOT_COM` is a Docker registry (e.g. `gcr.io`)
-
-Once you have that, you can run the same histogram example:
-
-```sh
-$ node examples/histogram.js --runner=kubernetes
-```
-
-Then run:
-```sh
-$ kubectl get pods
-```
-
-To see the pods it has created.
-
-Use `kubectl` to bridge the `gather` pod to your local machine:
-
-```sh
-$ kubectl port-forward ${pod-name}
-```
-
-In a different terminal:
-```sh
-$ node client.js histogram-service
-```
+machine.  [Here](docs/distributed.md) are instructions for using metaparticle
+to deploy to Kubernetes.
 
 ## FAQ
 
