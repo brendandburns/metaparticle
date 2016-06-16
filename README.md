@@ -27,6 +27,13 @@ Without further ado, here are some examples:
 ## Hello World
 
 ### Prerequisites
+Metaparticle is written for NodeJS, you need to have `node` and `npm` installed.
+
+Instructions from NodeJS:
+   * [Linux](https://nodejs.org/en/download/package-manager/)
+   * [MacOS](https://nodejs.org/dist/v4.4.5/node-v4.4.5.pkg)
+   * [Windows](https://nodejs.org/dist/v4.4.5/node-v4.4.5-x86.msi)
+
 ```sh
 $ git clone https://github.com/brendandburns/metaparticle.git
 $ npm install -g jayson q loglevel minimist tar-fs dockerode
