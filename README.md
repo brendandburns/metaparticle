@@ -3,10 +3,26 @@
 NB: This is really a work in progress for now.
 
 ## About
-Metaparticle is intended to radically simplify the process of building distributed systems.
+Metaparticle is intended to radically simplify the process of building distributed systems.  Metaparticle
+intends to remove much of the boilerplate associated with implementing and deploying common
+distributed system patterns.  Metaparticle enables you to focus on your code, while allowing you to treat
+your architecture as code as well.
 
-It takes a code as config approach to defining your infrastructure.  Additionally, if you
+Metaparticle does this using a *code as config* approach to defining your infrastructure.  This approach is
+intended to work with containerized applications regardless of the language in which those applications
+are written.  Additionally, if you
 choose to code in Javascript, you can blend your code and your infrastructure in a single file.
+
+Metaparticle works by defining [service patterns](docs/service-patterns.md), which you can instantiate
+via simple code.  This code contains both the definition of your architecture as well as the
+implementation of the service itself.
+
+Currently Metaparticle supports the following *service patterns*:
+   * Scatter/Gather  (aka Fan-Out/Fan-In)
+   * Shard: Choose a replica based on a user-supplied sharding function
+   * Spread: Spread load uniformly across all replicas
+
+Without further ado, here are some examples:
 
 ## Hello World
 
@@ -20,6 +36,20 @@ If you want to run the Kubernetes examples below, then you also need
 a working Kubernetes cluster and `kubectl` configured correctly.
 
 ### Running 
+This will run a simple HTTP service.  This service simply executes
+the following javascript function:
+
+```js
+function(request) {
+    return {"A": request};
+}
+```
+
+The result is returned over HTTP as a JSON blob.  The complete
+service is defined [here](examples/server.js).
+
+Here's how to run this service.
+
 ```sh
 $ cd metaparticle
 
@@ -33,6 +63,9 @@ $ node client.js simple-service
 # Tear down your service
 $ node examples/server.js --runner=docker delete
 ```
+
+You can look at [client.js](client.js) for the details of
+the client/server interactions.
 
 ## A more complex service 
 The previous example only turned up a single instance of a single service.
