@@ -94,7 +94,7 @@
 			deferred.resolve(false);	
 		}
 	} else {
-		if (!data.version == stats.m_time) {
+		if (data.version != stats.m_time) {
 			log.warn('versions do not match: %' + data.version + '% vs %' + stats.mtime + '%');
 			deferred.resolve(false);	
 		}
