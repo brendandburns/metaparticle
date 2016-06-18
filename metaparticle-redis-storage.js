@@ -5,7 +5,10 @@
     var c = null;
     var client = function() {
         if (c == null) {
-            c = new redis();
+	    var opts = {
+		    host: process.env['REDIS_HOST']
+	    };
+            c = new redis(opts);
             c.on('connect', function() {
                 console.log('connected');
             });

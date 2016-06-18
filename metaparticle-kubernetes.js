@@ -64,11 +64,17 @@
     /**
      * Run the described application
      */
-    module.exports.run = function(services) {
-        recursiveFn([], services, runKubernetesServiceReplicationController);
+    module.exports.run = function(services, args, env) {
+        recursiveFn([],
+	            services,
+		    runKubernetesServiceReplicationController,
+		    {
+			    'args': args,
+			    'env': env
+		    });
     };
 
-    var recursiveFn = function(prefix, services, fn) {
+    var recursiveFn = function(prefix, services, fn, opts) {
         if (!services) {
             return;
         }
@@ -79,17 +85,30 @@
 		if (prefix.length > 0) {
 		  prefixStr = prefix.join('-') + '-';
 		}
-                fn(prefixStr + service.name, service);
+                fn(prefixStr + service.name, service, opts);
             } else {
                 prefix.push(service.name);
-                recursiveFn(prefix, service.subservices, fn);
+                recursiveFn(prefix, service.subservices, fn, opts);
                 prefix.pop();
             }
         }
     }
 
-    var makeReplicationController = function(name, service, shard) {
+    var makeReplicationController = function(name, service, shard, opts) {
         var port = 3000;
+	var envArr = [];
+	if (!opts) {
+	    opts = {
+	       env: {},
+	       args: []
+	    };
+	}
+	for (key in opts.env) {
+            envArr.push({
+	        'name': key,
+		'value': opts.env[key]
+            });
+	}
         var rc = {
             "kind": "ReplicationController",
             "apiVersion": "v1",
@@ -119,10 +138,11 @@
                             'name': service.name,
                             'image': serverHost + ':' + registryPort + '/' + namePrefix + '/' + name,
                             'imagePullPolicy': 'Always',
-                            'command': ['node', '--harmony-proxies', path.basename(process.argv[1]), '--runner=kubernetes', 'serve', '' + port],
+                            'command': ['node', '--harmony-proxies', path.basename(process.argv[1]), '--runner=kubernetes', 'serve', '' + port].concat(opts.args),
                             'ports': [{
                                 'containerPort': port
-                            }]
+                            }],
+			    'env': envArr
                         }],
                         "restartPolicy": "Always",
                         "dnsPolicy": "ClusterFirst",
@@ -186,20 +206,20 @@
         return service;
     }
 
-    var runKubernetesServiceDeployment = function(name, service) {
+    var runKubernetesServiceDeployment = function(name, service, opts) {
         runKubernetesCommand('kubectl create -f -', makeDeployment(name, service));
         runKubernetesCommand('kubectl create -f -', makeService(name, {
             'app': name
         }));
     };
 
-    var runKubernetesServiceReplicationController = function(name, service) {
+    var runKubernetesServiceReplicationController = function(name, service, opts) {
         for (var i = 0; i < service.replicas; i++) {
             labels = {
                 'service': name,
                 'shard': '' + i
             }
-            runKubernetesCommand('kubectl create -f -', makeReplicationController(name, service, i));
+            runKubernetesCommand('kubectl create -f -', makeReplicationController(name, service, i, opts));
             runKubernetesCommand('kubectl create -f -', makeService(name + '-' + i, labels));
         }
     };

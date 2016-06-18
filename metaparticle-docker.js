@@ -142,10 +142,10 @@
         return deferred.promise;
     };
 
-    module.exports.run = function(services) {
+    module.exports.run = function(services, args, env) {
         var promise = createNetwork('mp-network');
         promise.then(function(network) {
-            recursiveRun([], services, network);
+            recursiveRun([], services, network, args, env);
         });
     }
 
@@ -173,38 +173,43 @@
         return deferred.promise;
     };
 
-    var recursiveRun = function(prefix, services, network) {
+    var recursiveRun = function(prefix, services, network, args, env) {
         for (var key in services) {
             var service = services[key];
             prefix.push(service.name);
             if (service.subservices) {
-                recursiveRun(prefix, service.subservices, network);
+                recursiveRun(prefix, service.subservices, network, args);
             } else {
-                runDocker(service, prefix.join("."), network);
+                runDocker(service, prefix.join("."), network, args);
             }
             prefix.pop();
         }
     }
 
-    var runDocker = function(service, name, network) {
+    var runDocker = function(service, name, network, args, env) {
         var replicas = service.replicas;
         if (!replicas) {
             replicas = 1;
         }
         for (var i = 0; i < replicas; i++) {
-            runReplica(service, name + "." + i, network);
+            runReplica(service, name + "." + i, network, args, env);
         }
     };
 
-    var runReplica = function(service, name, network) {
+    var runReplica = function(service, name, network, args, env) {
         var deferred = q.defer();
+	var envArr = [];
+	for (key in env) {
+		envArr.push(key + "=" + env[key]);
+	}
         client().createContainer({
                 Image: prefix + '/' + imageName,
-                Cmd: ['node', '--harmony-proxies', '/' + path.basename(process.argv[1]), '--runner=docker', 'serve', '3000'],
+                Cmd: ['node', '--harmony-proxies', '/' + path.basename(process.argv[1]), '--runner=docker', 'serve', '3000'].concat(args),
                 name: name,
                 ExposedPorts: {
                     '3000/tcp': {}
-                }
+                },
+		Env: envArr 
             },
             function(err, container) {
                 if (err) {

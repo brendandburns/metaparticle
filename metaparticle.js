@@ -234,12 +234,12 @@
             log.setLevel(log.levels.INFO);
         }
         runEnvironment = require('./metaparticle-' + runSpec);
-        storeEnvironment = require('./metaparticle-' + storeSpec + '-storage.js');
         var cmd = '';
         if (argv._ && argv._.length > 0) {
             cmd = argv._[0];
         }
         if (cmd == 'serve') {
+            storeEnvironment = require('./metaparticle-' + storeSpec + '-storage.js');
             log.info(handlers);
 
             for (var key in handlers) {
@@ -252,9 +252,12 @@
         } else if (cmd == 'delete') {
             runEnvironment.delete(services);
         } else {
+            // TODO: this is hacky.
             var promise = runEnvironment.build(services);
+
             promise.then(function() {
-                runEnvironment.run(services);
+	        var args = [ '--storage=' + storeSpec ];
+                runEnvironment.run(services, args, process.env);
             }).done();
         }
     };

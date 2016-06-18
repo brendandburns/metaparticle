@@ -1,6 +1,6 @@
 var mp = require('../metaparticle');
 
-mp.service(
+var service = mp.service(
     "simple-storage",
     function(request) {
 	if (!mp.scope.global.requests) {
@@ -10,5 +10,7 @@ mp.service(
 	return {"requests": mp.scope.global.requests};
     }
 );
+
+service.expose = true;
 
 mp.serve();
