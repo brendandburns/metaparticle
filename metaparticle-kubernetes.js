@@ -94,6 +94,9 @@
         }
     }
 
+    // exported for testing
+    module.exports.recursiveFnForTesting = recursiveFn;
+
     var makeReplicationController = function(name, service, shard, opts) {
         var port = 3000;
 	var envArr = [];
