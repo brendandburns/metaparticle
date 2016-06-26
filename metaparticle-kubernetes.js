@@ -18,7 +18,13 @@
     module.exports.injectExecForTesting = function(fn) {
         execFn = fn;
     };
-
+    var buildImageFn = docker.buildImage;
+    var pushImageFn = docker.pushImage;
+    module.exports.injectDockerImageForTesting = function(buildFn, pushFn) {
+	buildImageFn = buildFn;
+	pushImageFn = pushFn;
+    };
+    
     // Config
     // Docker registry to push to
     var host = process.env['DOCKER_REGISTRY'] 
@@ -50,9 +56,9 @@
     var buildImage = function(name) {
         var img = host + ":" + registryPort + "/" + namePrefix + "/" + name;
         var defer = q.defer();
-        docker.buildImage(img, process.cwd()).then(function() {
+        buildImageFn(img, process.cwd()).then(function() {
             log.debug('starting push');
-            docker.pushImage(img, host + ":" + registryPort).then(function(data) {
+            pushImageFn(img, host + ":" + registryPort).then(function(data) {
                 log.debug('push successful');
                 defer.resolve(data);
             }, function(err) {

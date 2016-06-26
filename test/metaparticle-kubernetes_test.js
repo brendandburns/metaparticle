@@ -1,5 +1,5 @@
 var test = require('unit.js');
-
+var q = require('q');
 describe('kubernetes', function() {
     var mp;
 
@@ -34,6 +34,33 @@ describe('kubernetes', function() {
         }
     };
 
+    it('should build correctly', function() {
+	var builds = 0;
+	var buildFn = function() {
+	    return q.fcall(function() {
+		// TODO: test image name here
+		builds = builds + 1;
+		return 5;
+	    });
+	}
+
+	var pushes = 0;
+	var pushFn = function() {
+	    return q.fcall(function() {
+		// TODO: test registry & image name here
+		pushes = pushes + 1;
+		return 5;
+	    });
+	}
+	
+	mp.injectDockerImageForTesting(buildFn, pushFn);
+
+	return mp.build(svcs).then(
+	    function() {
+		test.number(builds).is(3);
+		test.number(pushes).is(3);
+	    });
+    });
     
     it('should run correctly', function() {
         testRecursiveCommand('kubectl create -f -', mp.run);
