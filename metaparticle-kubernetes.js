@@ -13,6 +13,12 @@
     var util = require('./metaparticle-util');
     var docker = require('./metaparticle-docker');
 
+    // Dependency injection
+    var execFn = exec.exec;
+    module.exports.injectExecForTesting = function(fn) {
+        execFn = fn;
+    };
+
     // Config
     // Docker registry to push to
     var host = process.env['DOCKER_REGISTRY'] 
@@ -34,11 +40,11 @@
      * @returns A promise (using 'q') that is completed when the build is done.
      */
     module.exports.build = function(services) {
-        var promises = [];	
+        var promises = [];      
         recursiveFn([], services, function(name) {
-		promises.push(buildImage(name));
-	});
-	return q.all(promises);
+            promises.push(buildImage(name));
+        });
+        return q.all(promises);
     };
 
     var buildImage = function(name) {
@@ -66,12 +72,12 @@
      */
     module.exports.run = function(services, args, env) {
         recursiveFn([],
-	            services,
-		    runKubernetesServiceReplicationController,
-		    {
-			    'args': args,
-			    'env': env
-		    });
+                    services,
+                    runKubernetesServiceReplicationController,
+                    {
+                        'args': args,
+                        'env': env
+                    });
     };
 
     var recursiveFn = function(prefix, services, fn, opts) {
@@ -81,10 +87,10 @@
         for (var key in services) {
             var service = services[key];
             if (!service.subservices) {
-	        var prefixStr = ''
-		if (prefix.length > 0) {
-		  prefixStr = prefix.join('-') + '-';
-		}
+                var prefixStr = ''
+                if (prefix.length > 0) {
+                    prefixStr = prefix.join('-') + '-';
+                }
                 fn(prefixStr + service.name, service, opts);
             } else {
                 prefix.push(service.name);
@@ -99,19 +105,19 @@
 
     var makeReplicationController = function(name, service, shard, opts) {
         var port = 3000;
-	var envArr = [];
-	if (!opts) {
-	    opts = {
-	       env: {},
-	       args: []
-	    };
-	}
-	for (key in opts.env) {
+        var envArr = [];
+        if (!opts) {
+            opts = {
+		env: {},
+		args: []
+            };
+        }
+        for (key in opts.env) {
             envArr.push({
-	        'name': key,
-		'value': opts.env[key]
+                'name': key,
+                'value': opts.env[key]
             });
-	}
+        }
         var rc = {
             "kind": "ReplicationController",
             "apiVersion": "v1",
@@ -145,7 +151,7 @@
                             'ports': [{
                                 'containerPort': port
                             }],
-			    'env': envArr
+                            'env': envArr
                         }],
                         "restartPolicy": "Always",
                         "dnsPolicy": "ClusterFirst",
@@ -175,7 +181,7 @@
                     'spec': {
                         'containers': [{
                             'name': service.name,
-			    'image': serverHost + ':' + registryPort + '/' + name,
+                            'image': serverHost + ':' + registryPort + '/' + name,
                             'command': ['node', '--harmony-proxies', path.basename(process.argv[1]), '--runner=kubernetes', 'serve', '' + port],
                             'ports': [{
                                 'containerPort': port
@@ -228,7 +234,7 @@
     };
 
     var runKubernetesCommand = function(cmd, obj) {
-        var child = exec.exec(cmd, {}, function(err, stdout, stderr) {
+        var child = execFn(cmd, {}, function(err, stdout, stderr) {
             log.debug(`${stdout}`);
             if (err !== null) {
                 log.error(`stderr: ${stderr}`);
