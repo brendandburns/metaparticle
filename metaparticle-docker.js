@@ -35,9 +35,12 @@
         return module.exports.buildImage(img, process.cwd());
     }
 
+    var tar = null;
     module.exports.buildImage = function(name, dir) {
-        var tar = require('tar-fs');
-        var defer = q.defer();
+        if (tar == null) {
+	    tar = require('tar-fs');
+        }
+	var defer = q.defer();
         var tarStream = tar.pack(dir);
         client().buildImage(tarStream, {
             t: name
@@ -87,10 +90,14 @@
 
     var deleteNetwork = function(name) {
         var deferred = q.defer();
-        var network = client().getNetwork(name);
+	var network = client().getNetwork(name);
         network.remove({}, function(err, data) {
-            if (err) {
-                deferred.reject(err);
+	    if (err) {
+                if (err.statusCode == 404) {
+			deferred.resolve(null);
+		} else {
+			deferred.reject(err);
+		}
             } else {
                 deferred.resolve(data);
             }
@@ -123,20 +130,55 @@
 
     var deleteReplica = function(name) {
         var deferred = q.defer();
-        var container = client().getContainer(name);
+	var container = client().getContainer(name);
+	container.inspect({}, function(err, data) {
+		if (err != null) {
+			if (err.statusCode == 404) {
+				deferred.resolve(null);
+			} else {
+				deferred.reject(err);
+			}
+			return;
+		}
+		var promise;
+		if (data.State.Running) {
+			promise = killContainer(container);
+		} else {
+			promise = removeContainer(container);
+		}
+		promise.then(
+			function(data) {
+				deferred.resolve();
+			},
+			function(err) {
+				deferred.reject(err);
+			});
+	});
+	return deferred.promise;
+    };
 
+    var killContainer = function(container) {
+        var deferred = q.defer();
         // todo, this should really be a chained promise.
         container.kill({}, function(err, data) {
             if (err) {
                 deferred.reject(err);
+	    } else {
+		removeContainer(container).then(
+			function(data) { deferred.resolve(data); },
+			function(err) { deferred.reject(err); });
+	    }
+	});
+	return deferred.promise;
+    };
+
+    var removeContainer = function(container) {
+        var deferred = q.defer();
+        container.remove({}, function(err, data) {
+            if (err) {
+                deferred.reject(err);
             } else {
-                container.remove({}, function(err, data) {
-                    if (err) {
-                        deferred.reject(err);
-                    } else {
-                        deferred.resolve(data);
-                    }
-                });
+                deferred.resolve(data);
             }
         });
         return deferred.promise;
@@ -178,9 +220,9 @@
             var service = services[key];
             prefix.push(service.name);
             if (service.subservices) {
-                recursiveRun(prefix, service.subservices, network, args);
+                recursiveRun(prefix, service.subservices, network, args, env);
             } else {
-                runDocker(service, prefix.join("."), network, args);
+                runDocker(service, prefix.join("."), network, args, env);
             }
             prefix.pop();
         }
