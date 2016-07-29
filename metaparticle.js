@@ -255,9 +255,15 @@
             // TODO: this is hacky.
             var promise = runEnvironment.build(services);
 
+	    var env = {};
+	    if (!argv['environment']) {
+		env = process.env;
+	    } else {
+		env = util.makeMap(argv['environment']);
+	    }
             promise.then(function() {
 	        var args = [ '--storage=' + storeSpec ];
-                runEnvironment.run(services, args, process.env);
+                runEnvironment.run(services, args, env);
             }).done();
         }
     };

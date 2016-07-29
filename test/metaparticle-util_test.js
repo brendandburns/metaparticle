@@ -96,4 +96,34 @@ describe('util', function() {
             }
         }
     });
+
+    it("should make a map", function() {
+	var tests = [
+	    {
+		"input": "foo=bar,baz=blah",
+		"output": {
+		    'foo': 'bar',
+		    'baz': 'blah'
+		}
+	    },
+	    {
+		"input": "foo=bar",
+		"output": {
+		    'foo': 'bar'
+		}
+	    },
+	    {
+		"input": "",
+		"output": {}
+	    },
+	    {
+		"output": {}
+	    }
+	];
+	for (var i = 0; i < tests.length; i++) {
+	    var t = tests[i];
+	    var map = mp.makeMap(t.input);
+	    test.object(map).is(t.output);
+	}
+    });
 });
