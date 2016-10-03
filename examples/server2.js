@@ -3,7 +3,11 @@ var os = require('os');
 
 var service = mp.service(
         "my-service",
-	mp.scatter(3, function(data) {
+	mp.shard(3,
+	function(data) {
+		return JSON.stringify(data).length % 3;
+	},
+	function(data) {
 		return {"network": os.networkInterfaces()};
 	},
 	function(responses) {
@@ -13,6 +17,6 @@ var service = mp.service(
 		}
 		return merged;
        }));
-service.subservices.gather.expose = true;
+service.subservices.shard.expose = true;
 
 mp.serve();

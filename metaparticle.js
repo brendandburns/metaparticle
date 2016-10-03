@@ -106,7 +106,7 @@
             fn: function(callback, data) {
                 var shard = shardingFn(data) % shards;
                 var serviceName = util.findServiceName(computeGUID, services);
-                var promise = requestPromise(serviceName, 'shard', shard, data);
+                var promise = requestPromise(serviceName, 'compute', shard, data);
                 promise.then(function(data) {
                     callback(null, data);
                 }, function(err) {
