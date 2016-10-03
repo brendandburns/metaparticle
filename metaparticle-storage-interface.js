@@ -14,7 +14,7 @@
     /**
      * Load a particular data scope and return it
      * @param {string} scope The scope to load
-     * @returns A promsie for the data for that scope.
+     * @returns A promise for the data for that scope.
      */
     module.exports.load = function(scope) {
 	    return q.fcall(function() {

@@ -12,6 +12,9 @@
     var runEnvironment;
     // Forward reference to the storage implementation
     var storageEnvironment;
+    // Forward reference to the auth implementation
+    var authEnvironment;
+
     // Canonical list of defined services 
     var services = {};
     // Scope variables
@@ -213,6 +216,10 @@
         if (!storeSpec || storeSpec.length == 0) {
             storeSpec = 'file';
         }
+	var authSpec = argv['auth'];
+	if (!authSpec || authSpec.length == 0) {
+	    authSpec = 'none';
+	}
         var logSpec = argv['logging'];
         if (logSpec) {
             switch (logSpec) {
@@ -240,6 +247,7 @@
         }
         if (cmd == 'serve') {
             storeEnvironment = require('./metaparticle-' + storeSpec + '-storage.js');
+	    authEnvironment = require('./metaparticle-' + authSpec + '-auth.js');
             log.info(handlers);
 
             for (var key in handlers) {
@@ -248,6 +256,13 @@
             }
 
             var server = jayson.server(handlers);
+	    server.on('http request', (req) => {
+		console.log('http received');
+		console.log(req);
+		req.params = {
+		    'foobar': 'baz'
+		};
+	    });
             server.http().listen(parseInt(argv._[1]));
         } else if (cmd == 'delete') {
             runEnvironment.delete(services);
