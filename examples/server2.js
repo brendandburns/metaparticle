@@ -1,10 +1,10 @@
 var mp = require('../metaparticle');
 var os = require('os');
 
-mp.service(
+var service = mp.service(
         "my-service",
 	mp.scatter(3, function(data) {
-		return {"A": os.networkInterfaces()};
+		return {"network": os.networkInterfaces()};
 	},
 	function(responses) {
 		var merged = [];
@@ -13,5 +13,6 @@ mp.service(
 		}
 		return merged;
        }));
+service.subservices.gather.expose = true;
 
 mp.serve();
