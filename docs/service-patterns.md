@@ -16,7 +16,7 @@ var service = mp.service(
     // @param {Object} request is an in-bound JSON body from a POST
     // returns {Object} serialized to HTTP and sent back as the response
     function(request) {
-        return {"A": request};
+        return {"theRequest": request};
     }
 );
 ```

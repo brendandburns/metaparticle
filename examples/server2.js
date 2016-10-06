@@ -5,7 +5,7 @@ var numReplicas = 3;
 
 // Create a randomly distributed service
 var service = mp.service(
-	"my-service",
+	"replicated-service",
 	// A service that is spread amongst 3 replicas
 	mp.spread(
 		numReplicas,

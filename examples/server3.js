@@ -5,7 +5,7 @@ var numShards = 3;
 
 // A sharded service that shards based on user-id length
 var service = mp.service(
-	"my-service",
+	"sharded-service",
 	// Defines the sharded service
 	mp.shard(
 		numShards,

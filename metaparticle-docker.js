@@ -37,6 +37,7 @@
 
     var tar = null;
     module.exports.buildImage = function (name, dir) {
+        log.info("building image (this may take a bit)");
         if (tar == null) {
             tar = require('tar-fs');
         }
@@ -48,10 +49,14 @@
             if (err) {
                 defer.reject(err);
             } else {
-                output.pipe(process.stdout, {
-                    end: true
+                output.on('data', function(chunk) {
+                    log.debug(chunk.toString());
                 });
+                //output.pipe(process.stdout, {
+                //    end: true
+                //});
                 output.on('end', function () {
+                    log.info("building image done.");
                     defer.resolve(null);
                 });
             }
