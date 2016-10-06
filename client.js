@@ -11,7 +11,13 @@ client.on('http request', (req) => {
 	log.debug(req);
 });
 
-client.request(process.argv[2], [{'foo': 'bar'}], function(err, response) {
+var obj = {'foo': 'bar'};
+if (process.argv.length > 3) {
+   log.info("Loading object from command line");
+   obj = JSON.parse(process.argv[3]);
+}
+
+client.request(process.argv[2], [obj], function(err, response) {
   if(err) throw err;
   console.log(JSON.stringify(response.result)); 
 });

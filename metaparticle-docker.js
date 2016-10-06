@@ -245,7 +245,7 @@
         for (key in env) {
             envArr.push(key + "=" + env[key]);
         }
-        client().createContainer({
+        var createOpts = {
             Image: prefix + '/' + imageName,
             Cmd: ['node', '--harmony-proxies', '/' + path.basename(process.argv[1]), '--runner=docker', 'serve', '3000'].concat(args),
             name: name,
@@ -253,7 +253,16 @@
                 '3000/tcp': {}
             },
             Env: envArr
-        },
+        };
+
+        if (service.expose) {
+            createOpts.PortBindings = {
+                '3000/tcp': [{
+                    'HostPort': '3000'
+                }]
+            };
+        }
+        client().createContainer(createOpts,
             function (err, container) {
                 if (err) {
                     log.error('error creating: ' + err);
@@ -267,13 +276,6 @@
         deferred.promise.then(
             function (container) {
                 var startOpts = {};
-                if (service.expose) {
-                    startOpts.PortBindings = {
-                        '3000/tcp': [{
-                            'HostPort': '3000'
-                        }]
-                    };
-                }
                 container.start(startOpts,
                     function (err, data) {
                         if (err) {

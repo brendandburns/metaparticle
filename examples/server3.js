@@ -1,16 +1,28 @@
 var mp = require('../metaparticle');
+var os = require('os');
 
+var numShards = 3;
+
+// A sharded service that shards based on user-id length
 var service = mp.service(
-    "simple-storage",
-    function(request) {
-	if (!mp.scope.global.requests) {
-		mp.scope.global.requests = 0;
-	}
-	mp.scope.global.requests++;
-	return {"requests": mp.scope.global.requests};
-    }
-);
+	"my-service",
+	// Defines the sharded service
+	mp.shard(
+		numShards,
+		function shardingFunction(data) {
+			try {
+				return data.user.length % numShards;
+			} catch (ex) {
+				return 0;
+			}
+		},
+		function serviceFunction(data) {
+			return {
+				"request": data,
+				"server": os.hostname()
+			};
+		}));
 
-service.expose = true;
+service.subservices.shard.expose = true;
 
 mp.serve();
