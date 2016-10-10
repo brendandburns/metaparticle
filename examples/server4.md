@@ -89,3 +89,5 @@ When you are done, remember to tear down the service:
 $ node examples/server4.js delete
 ```
 
+Now you are ready to move on to storage in [chapter 5](server5.md)
+
