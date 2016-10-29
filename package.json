@@ -4,6 +4,8 @@
   "description": "Metaparticle: Compile your infrastructure!",
   "main": "metaparticle.js",
   "directories": {
+    "doc": "docs",
+    "example": "examples",
     "test": "test"
   },
   "scripts": {
@@ -20,5 +22,27 @@
     "blanket": {
       "pattern": ""
     }
-  }
+  },
+  "dependencies": {
+    "basic-auth": "^1.0.4",
+    "child_process": "^1.0.2",
+    "dockerode": "^2.3.1",
+    "harmony-proxy": "^1.0.1",
+    "jayson": "^2.0.2",
+    "loglevel": "^1.4.1",
+    "minimist": "^1.2.0",
+    "node-redis-client": "^0.0.10",
+    "objectpool": "^0.0.2",
+    "q": "^1.4.1",
+    "tar-fs": "^1.14.0"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brendandburns/metaparticle.git"
+  },
+  "bugs": {
+    "url": "https://github.com/brendandburns/metaparticle/issues"
+  },
+  "homepage": "https://github.com/brendandburns/metaparticle#readme"
 }
