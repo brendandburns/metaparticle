@@ -1,7 +1,7 @@
 (function () {
     var q = require('q');
     var redis = require('node-redis-client');
-    //var op = require('objectpool');
+    var log = require('loglevel').getLogger('metaparticle-redis');
 
     var makeRedisClient = function () {
         var opts = {
@@ -9,7 +9,7 @@
         };
         c = new redis(opts);
         c.on('connect', function () {
-            console.log('connected');
+            log.info('connected');
         });
         return c;
     }
@@ -50,16 +50,15 @@
         var c = client();
         // TODO: Probably need a MULTI here
         c.call('GET', 'value', function (err, res) {
-            console.log('baz');
             if (err) {
                 deferred.reject(err);
                 return;
             }
-            console.log(res);
+            log.debug(res);
             if (res != null) {
                 deferred.resolve(JSON.parse(res));
             } else {
-                console.log('resolving null');
+                log.debug('resolving null');
                 deferred.resolve({
                     'data': {},
                     'version': 0
@@ -83,12 +82,12 @@
         // ALTERNATELY, JUST CREATE A NEW CLIENT FOR EACH STORE.
 
         var id = Math.floor(Math.random() * 1000);
-        console.log(id + " redis store");
+        log.debug(id + " redis store");
         var c = client();
         // TODO: Turn this into it's own function that returns a promise, and then release in that
         // promise.
         c.call('WATCH', 'value', function (err) {
-            console.log(id + " redis store 2 " + err);
+            log.debug(id + " redis store 2 " + err);
 
             if (err) {
                 deferred.reject(err);
@@ -96,7 +95,7 @@
             }
 
             c.call('GET', 'value', function (err, res) {
-                console.log(id + " redis store 3 " + err);
+                log.debug(id + " redis store 3 " + err);
 
                 try {
                     if (err) {
@@ -108,10 +107,10 @@
                         deferred.resolve(false);
                         return;
                     }
-                    console.log(id + " redis store 3.5");
+                    log.debug(id + " redis store 3.5");
                     if (res != null) {
                         var obj = JSON.parse(res);
-                        console.log(id + ' checking: ' + obj.version + " vs " + data.version);
+                        log.debug(id + ' checking: ' + obj.version + " vs " + data.version);
                         if (obj.version != data.version) {
                             deferred.resolve(false);
                             return;
@@ -123,26 +122,26 @@
                     c.call('MULTI', function () {
                         c.call('SET', 'value', JSON.stringify(data), function () {
                             c.call('EXEC', function (err, res) {
-                                console.log(id + " redis store 4 " + err);
+                                log.debug(id + " redis store 4 " + err);
                                 if (err) {
-                                    console.log(id + ' rejected: ' + err);
+                                    log.debug(id + ' rejected: ' + err);
                                     //deferred.reject(err);
                                     deferred.resolve(false);
                                     return;
                                 }
                                 if (res == null) {
-                                    console.log(id + ' rejected: null');
+                                    log.debug(id + ' rejected: null');
                                     deferred.resolve(false);
                                     return;
                                 }
-                                console.log(id + ' result was: ' + res);
-                                console.log(id + ' resolving true');
+                                log.debug(id + ' result was: ' + res);
+                                log.debug(id + ' resolving true');
                                 deferred.resolve(true);
                             });
                         });
                     });
                 } catch (ex) {
-                    console.log(ex);
+                    log.debug(ex);
                 }
             });
         });
