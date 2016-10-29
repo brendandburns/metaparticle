@@ -59,7 +59,7 @@
 
     var requestPromise = function (serviceName, method, shard, data) {
         var host = runEnvironment.getHostname(serviceName, shard);
-        log.debug("connecting to: " + host)
+        log.error('foo: ' +"connecting to: " + host)
         var client = makeClient("http://" + host + ":3000");
         var defer = q.defer();
         client.request(method, [data], function (err, response) {
@@ -111,7 +111,7 @@
                     callback(null, data);
                 }, function (err) {
                     callback(err, null);
-                });
+                }).done();
             }
         };
     };
@@ -150,15 +150,17 @@
                     },
                     function (err) {
                         callback(err, null)
-                    });
+                    }).done();
             }
         };
     };
 
     var wrapHandler = function (handlerFn) {
-        var failures = 0;
-        var fn = function (args, callback) {
-            log.debug('calling load');
+        var fn = function (args, callback, failures) {
+            if (!failures) {
+                failures = 0;
+            }
+            log.error('foo: ' +'calling load');
             storeEnvironment.load('global').then(function (data) {
                 var dirty = false;
                 var Proxy = require('harmony-proxy');
@@ -170,31 +172,36 @@
                         return true;
                     }
                 });
-                log.debug('calling handler');
+                log.error('foo: ' +'calling handler');
                 handlerFn(args, function (err, fnData) {
                     if (err) {
+                        log.error('foo: ' + 'error: ' + err);
                         callback(err, null);
                         return;
                     }
                     if (dirty) {
-                        log.debug('storing data');
+                        log.error('foo: ' +'storing data');
                         storeEnvironment.store('global', data).then(function (success) {
-                            log.debug('status: ' + success);
+                            log.error('foo: ' +'status: ' + success);
                             if (success) {
                                 callback(null, fnData);
                             } else if (failures < 5) {
                                 failures++;
+                                var delayms = 1000 * (1 + Math.random() * failures);
+                                console.log("sleeping for: " + delayms);
                                 setTimeout(function () {
-                                    fn(args, callback);
-                                }, 1000);
+                                    fn(args, callback, failures);
+                                }, delayms);
                             } else {
+                                console.log('bailing out, failures is: ' + failures);
                                 callback(new Error('failed to store data'), null);
                             }
                         }, function (err) {
+                            console.log("ERROR: " + err);
                             callback(err, null);
-                        });
+                        }).done();
                     } else {
-                        log.debug('no changes');
+                        log.error('foo: ' +'no changes');
                         callback(null, fnData);
                     }
                 })
@@ -257,11 +264,6 @@
 
             var server = jayson.server(handlers);
             server.on('http request', (req) => {
-                console.log('http received');
-                console.log(req);
-                req.params = {
-                    'foobar': 'baz'
-                };
             });
             server.http().listen(parseInt(argv._[1]));
         } else if (cmd == 'delete') {

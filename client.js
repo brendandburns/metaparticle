@@ -19,5 +19,6 @@ if (process.argv.length > 3) {
 
 client.request(process.argv[2], [obj], function(err, response) {
   if(err) throw err;
+  //console.log(response);
   console.log(JSON.stringify(response.result)); 
 });
