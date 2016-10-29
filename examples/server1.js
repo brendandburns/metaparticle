@@ -1,5 +1,5 @@
 // Import the metaparticle library
-var mp = require('../metaparticle');
+var mp = require('metaparticle');
 
 // Create a simple service.
 var service = mp.service(

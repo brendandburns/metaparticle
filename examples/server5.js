@@ -1,4 +1,4 @@
-var mp = require('../metaparticle');
+var mp = require('metaparticle');
 
 var service = mp.service(
     "simple-storage",

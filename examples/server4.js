@@ -1,5 +1,5 @@
 // Import the main library
-var mp = require('../metaparticle');
+var mp = require('metaparticle');
 
 // A simple function for calculating a Gaussian distributed value
 // from a uniform random value
