@@ -21,7 +21,7 @@ Here is the complete code:
 
 ```javascript
 // Import the main library
-var mp = require('../metaparticle');
+var mp = require('metaparticle');
 
 // A simple function for calculating a Gaussian distributed value
 // from a uniform random value
@@ -73,7 +73,7 @@ mp.serve();
 You can run this service just like any other metaparticle service:
 
 ```console
-$ node examples/server4.js
+$ node server4.js
 ```
 
 And you can call it like any other service:
@@ -86,7 +86,7 @@ $ node client.js histogram-service
 When you are done, remember to tear down the service:
 
 ```console
-$ node examples/server4.js delete
+$ node server4.js delete
 ```
 
 Now you are ready to move on to storage in [chapter 5](server5.md)

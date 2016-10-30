@@ -12,7 +12,7 @@ As a first example of this, consider a simple server that keeps track of the num
 that it has seen:
 
 ```javascript
-var mp = require('../metaparticle');
+var mp = require('metaparticle');
 
 var service = mp.service(
     "simple-storage",
@@ -32,12 +32,15 @@ mp.serve();
 
 This looks a lot like our initial server, however, notice that it is manipulating `mp.scope.global.requests`
 This is avariable in the global scopeof our overall metaparticle application.  By chaging it's value (`++`)
-we are changing the value in general.
+we are changing the value in general.  Anyone who has played around with distributed systems, however
+knows that such a modification is fraught with challenge. Multiple requests on multiple different servers
+can lead to incorrect results if the proper concurrency design isn't in place. Metaparticle attempts to
+make this simple by handling this for you.
 
 You can try this service as follows:
 
 ```console
-$ node examples\server5.js
+$ node server5.js
 ```
 
 As before, you can access this via `client.js` or `curl`
@@ -59,7 +62,7 @@ changed values, then storing those back in with optimistic concurrency to elimin
 Now let's turn down that server:
 
 ```console
-node examples/server5.js delete
+node server5.js delete
 ```
 
 But of course, by default the service uses a default storage implementation based on files
@@ -71,8 +74,8 @@ implementation.  For example the Redis server is also supported:
 docker run -d --net=host redis
 
 # Set up the service to use redis for storage
-export REDIS_HOST=<ip-address-from-ifconfig>
-node examples/server5.js --storage=redis
+export REDIS_HOST=<ip-address-of-machine-from-ifconfig>
+node server5.js --storage=redis
 ```
 
 Now access the service:
@@ -85,8 +88,8 @@ $ node client.js simple-storage
 Now to validate that the storage is working, restart your service:
 
 ```console
-$ node examples/server5.js delete
-$ node examples/server5.js --storage=redis
+$ node server5.js delete
+$ node server5.js --storage=redis
 ```
 
 Now make an additional request:
@@ -98,10 +101,22 @@ $ node client.js simple-storage
 
 Notice how the previous request count is maintained.
 
+But remember, the real challenge of storage is concurrent requests. Metaparticle simplifies this
+as well. To see this in action, try accessing the server a number of times in parallel:
+
+```console
+$ for x in 0 1 2 3 4 5 6 7 8 9; do \
+    node client.js simple-storage &
+  done
+```
+
+You should see that despite the requests coming in parallel, metaparticle successfully eliminates
+race conditions and correctly counts the number of requests.
+
 Before you move on, remember to tear down your service:
 
 ```console
-$ node examples/server5.js delete
+$ node server5.js delete
 ```
 
-
+Now, let's move on to [chapter six](server6.md) to see this distributed to a number of replicas.

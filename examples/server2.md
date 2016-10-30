@@ -19,7 +19,7 @@ In the following, we'll take the first steps, we'll take that previous service a
 into a simple, replicated load balanced service.
 
 ```javascript
-var mp = require('../metaparticle');
+var mp = require('metaparticle');
 var os = require('os');
 
 var numReplicas = 3;
@@ -53,7 +53,7 @@ load across the replicas (in this case there are three of them.)
 Run this application just like before:
 
 ```console
-node examples/server2.js
+node server2.js
 ```
 
 Now take a look at `docker ps`, you'll see four containers running.  Three of them are running
@@ -85,7 +85,7 @@ Note the roughly even distribution of the three different backends you deployed.
 Remember to tear down your service:
 
 ```console
-$ node examples/server2.js delete
+$ node server2.js delete
 ```
 
 I hope by now you're beginning to see the goals and the structure of metaparticle. And you're on

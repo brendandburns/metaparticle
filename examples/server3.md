@@ -20,7 +20,7 @@ takes three parameters:
 Here's our same program, but now it's using sharding:
 
 ```javascript
-var mp = require('../metaparticle');
+var mp = require('metaparticle');
 var os = require('os');
 
 var numShards = 3;
@@ -53,7 +53,7 @@ mp.serve();
 You run this service the same way as you've run all of the others:
 
 ```console
-node examples/server3.js
+node server3.js
 ```
 
 If you run `docker ps` you'll see nothing appears to have changed from the previous example.
@@ -94,7 +94,7 @@ $ node client.js sharded-service '{"user": "me, eloise"}'
 Remember to tear down your service:
 
 ```console
-node examples/server3.js delete
+node server3.js delete
 ```
 
 Ok, let's move on to our final distributed service pattern in [chapter 4](server4.md).

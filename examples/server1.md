@@ -1,5 +1,21 @@
 ## MetaParticle Code Walk, Chapter 1: A simple service
 
+
+### Prerequisites
+To get your environment set up, ensure that you have `docker` installed.  If you want to
+run the examples with Kubernetes, you need a Kubernetes cluster and `kubectl` installed as well.
+
+To get the code, clone the github repo:
+```console
+$ git clone https://github.com/brendandburns/metaparticle
+```
+
+And move into the examples directory:
+
+```console
+cd metaparticle/examples
+```
+
 Metaparticle works by treating code as infrastructure.  This means that you
 define the deployment of your application in the same place that you define
 the code that implements your application.
@@ -9,7 +25,7 @@ doing earlier:
 
 ```javascript
 // Import the metaparticle library
-var mp = require('../metaparticle');
+var mp = require('metaparticle');
 
 // Create a simple service.
 var service = mp.service(
@@ -35,7 +51,7 @@ into the response.
 You can run this example with:
 
 ```console
-$ node examples/server1.js
+$ node server1.js
 building image (this may take a bit)
 building image done.
 deploying
@@ -66,7 +82,7 @@ application. Try running `docker ps` and you should see your running container.
 If you want to tear down your application, you can run:
 
 ```console
-$ node examples/server1.js delete
+$ node server1.js delete
 ```
 
 Run `docker ps` again and you'll see your application is gone.
@@ -78,7 +94,7 @@ And yes, clearly `update` would be a handy command.  Metaparticle is a work in p
 Remember to tear down your server:
 
 ```console
-$ node examples/server1.js delete
+$ node server1.js delete
 ```
 
 Ok, ready to move on?  Let's go to [chapter 2](server2.md).

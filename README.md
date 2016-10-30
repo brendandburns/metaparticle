@@ -35,54 +35,16 @@ Instructions from NodeJS:
    * [Windows](https://nodejs.org/dist/v4.4.5/node-v4.4.5-x86.msi)
 
 ```sh
-$ git clone https://github.com/brendandburns/metaparticle.git
-$ npm install -g jayson q loglevel minimist tar-fs dockerode
+$ npm install metaparticle
 ```
 
 If you want to run the Kubernetes examples below, then you also need
 a working Kubernetes cluster and `kubectl` configured correctly.
 
-### Running 
-This will run a simple HTTP service.  This service simply executes
-the following javascript function:
+## Walkthrough
+There is a complete tutorial style walkthrough of the concepts behind
+metaparticle, starting [here](examples/server1.md).
 
-```js
-function(request) {
-    return {"A": request};
-}
-```
-
-The result is returned over HTTP as a JSON blob.  The complete
-service is defined [here](examples/server.js).
-
-Here's how to run this service.
-
-```sh
-$ cd metaparticle
-
-# Run an example using Docker
-$ node examples/server.js --runner=docker
-
-# Connect to the service you just ran
-$ node client.js simple-service
-{"A":{"foo":"bar"}}
-
-# Tear down your service
-$ node examples/server.js --runner=docker delete
-```
-
-You can look at [client.js](client.js) for the details of
-the client/server interactions.
-
-## A more complex service 
-The previous example only turned up a single instance of a single service.
-
-Metaparticle is really about (re)using distributed system patterns.
-
-[Here](docs/histogram.md) is an example of a scatter/gather tree. 
-Each request that is received
-by the root, is sent out to every leaf.  All responses are aggregated on
-the root, and the aggregate response is passed back to the caller.
 
 ## Distributed examples
 The previous examples are fun, but they don't really deploy beyond a single
