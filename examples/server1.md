@@ -9,6 +9,9 @@ You also need to install metaparticle itself:
 
 ```console
 npm install -g metaparticle
+
+# This path may be different on different systems.
+export NODE_PATH=/usr/lib/node_modules
 ```
 
 To get the code, clone the github repo:
