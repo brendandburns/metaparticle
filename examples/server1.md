@@ -8,7 +8,7 @@ run the examples with Kubernetes, you need a Kubernetes cluster and `kubectl` in
 You also need to install metaparticle itself:
 
 ```console
-npm install -g metaparticle
+npm install -g metaparticle jayson
 
 # This path may be different on different systems.
 export NODE_PATH=/usr/lib/node_modules
