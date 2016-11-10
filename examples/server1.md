@@ -14,6 +14,8 @@ npm install -g metaparticle
 export NODE_PATH=/usr/lib/node_modules
 ```
 
+You also need to be logged in as a user who can run the `docker` cli, try `docker ps` to verify this.
+
 To get the code, clone the github repo:
 ```console
 $ git clone https://github.com/brendandburns/metaparticle
