@@ -5,6 +5,12 @@
 To get your environment set up, ensure that you have `docker` installed.  If you want to
 run the examples with Kubernetes, you need a Kubernetes cluster and `kubectl` installed as well.
 
+You also need to install metaparticle itself:
+
+```console
+npm install -g metaparticle
+```
+
 To get the code, clone the github repo:
 ```console
 $ git clone https://github.com/brendandburns/metaparticle
