@@ -1,6 +1,9 @@
-# Metaparticle
+# Metaparticle [This repo is old and deprecated, please visit [https://metaparticle.io](https://metaparticle.io)
 
-NB: This is really a work in progress for now.
+NB: This work was an experiment. The ideas have moved on to a second implementation that you can find here:
+
+   * https://github.com/metaparticle-io/package
+   * https://github.com/metaparticle-io/sync
 
 ## About
 Metaparticle is intended to radically simplify the process of building distributed systems.  Metaparticle
